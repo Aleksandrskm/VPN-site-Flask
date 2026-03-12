@@ -5,6 +5,8 @@ import { dbApi } from '../api/dbApi.js';
 export const Modal = {
     element: null,
     unsubscribe: null,
+    currentFormData: {},
+    currentModalData: null,
 
     create() {
         const modal = document.createElement('div');
@@ -19,13 +21,8 @@ export const Modal = {
 
         // Подписываемся на изменения контекста
         this.unsubscribe = ModalContext.subscribe((state) => {
-            this.update(state);
-        });
-
-        // Закрытие по клику вне модалки
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                ModalContext.closeModal();
+            if (this.element && this.element.isConnected) {
+                this.update(state);
             }
         });
 
@@ -39,9 +36,54 @@ export const Modal = {
 
         if (state.isOpen) {
             this.element.classList.add('show');
-            this.renderContent(state);
+
+            const needsFullRender = this.shouldFullRender(state);
+
+            this.currentFormData = { ...state.formData };
+            this.currentModalData = { ...state.modalData };
+
+            if (needsFullRender) {
+                console.log('Full render modal');
+                this.renderContent(state);
+            } else {
+                this.updateInputValues(state);
+            }
         } else {
             this.element.classList.remove('show');
+            this.currentFormData = {};
+            this.currentModalData = null;
+        }
+    },
+
+    shouldFullRender(state) {
+        const content = this.element.querySelector('.modal-content');
+        if (!content) return true;
+
+        if (!this.currentModalData || this.currentModalData.action !== state.modalData.action) {
+            return true;
+        }
+
+        const oldFields = this.currentModalData?.data || [];
+        const newFields = state.modalData?.data || [];
+
+        if (oldFields.length !== newFields.length) return true;
+
+        for (let i = 0; i < newFields.length; i++) {
+            if (oldFields[i]?.name !== newFields[i]?.name) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    getTitle(action) {
+        switch(action) {
+            case 'add': return 'Добавление';
+            case 'edit': return 'Редактирование';
+            case 'copy': return 'Копирование';
+            case 'delete': return 'Удаление';
+            default: return 'Модальное окно';
         }
     },
 
@@ -49,88 +91,112 @@ export const Modal = {
         const content = this.element.querySelector('.modal-content');
         if (!content) return;
 
-        const { modalData, row } = state;
-        let formData = row ? { ...row } : {};
-
-        const getTitle = () => {
-            switch(modalData.action) {
-                case 'add': return 'Добавление';
-                case 'edit': return 'Редактирование';
-                case 'copy': return 'Копирование';
-                case 'delete': return 'Удаление';
-                default: return 'Модальное окно';
-            }
-        };
+        const { modalData } = state;
+        const title = this.getTitle(modalData.action);
 
         content.innerHTML = `
             <div class="modal-header">
-                <h2>${getTitle()}</h2>
-                <button class="close-btn" id="modal-close">&times;</button>
+                <h2>${title}</h2>
             </div>
             <form id="modal-form">
                 <div class="modal-body">
-                    ${this.renderFormFields(modalData, row)}
+                    ${this.renderFormFields(modalData, this.currentFormData)}
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">${getTitle()}</button>
+                    <button type="button" class="btn btn-primary" id="modal-submit">${title}</button>
                     <button type="button" class="btn btn-secondary" id="modal-cancel">Закрыть</button>
                 </div>
             </form>
         `;
 
-        // Обработчики кнопок
-        content.querySelector('#modal-close').addEventListener('click', () => ModalContext.closeModal());
-        content.querySelector('#modal-cancel').addEventListener('click', () => ModalContext.closeModal());
-
-        const form = content.querySelector('#modal-form');
-        form.addEventListener('submit', async (e) => {
+        // Обработчик для кнопки "Закрыть"
+        content.querySelector('#modal-cancel').addEventListener('click', (e) => {
             e.preventDefault();
-            await this.handleSubmit(modalData, formData);
+            ModalContext.closeModal();
+        });
+
+        // Кнопка submit
+        const submitBtn = content.querySelector('#modal-submit');
+        submitBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            await this.handleSubmit(modalData, this.currentFormData);
         });
 
         // Добавляем обработчики для инпутов
-        this.attachInputHandlers(content, (field, value) => {
-            formData = { ...formData, [field]: value };
+        this.attachInputHandlers(content);
+
+        // Добавляем обработчик submit на форму
+        const form = content.querySelector('#modal-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         });
     },
 
-    renderFormFields(modalData, row) {
-        if (!modalData.data) return '';
+    renderFormFields(modalData, formData) {
+        if (!modalData.data) return '<div class="empty-fields">Нет полей для отображения</div>';
 
-        if (row && modalData.action !== 'delete') {
-            return Object.entries(row).map(([key, value]) => {
-                const fieldInfo = modalData.data.find(item => item.name === key);
-                return `
-                    <div class="form-group">
-                        <label>${fieldInfo?.description || key}</label>
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            data-field="${key}"
-                            value="${value === null ? '' : value}"
-                        />
-                    </div>
-                `;
-            }).join('');
-        } else {
-            return modalData.data.map(item => `
+        return modalData.data.map(item => {
+            const fieldName = item.name;
+            const fieldId = `modal-field-${fieldName}`;
+            const value = formData && formData[fieldName] !== undefined ? formData[fieldName] : null;
+            const displayValue = value === null || value === undefined ? '' : String(value);
+
+            return `
                 <div class="form-group">
-                    <label>${item.description}</label>
+                    <label for="${fieldId}">${item.description || item.name}</label>
                     <input 
                         type="text" 
                         class="form-control" 
-                        data-field="${item.name}"
+                        id="${fieldId}"
+                        data-field="${fieldName}"
+                        value="${displayValue.replace(/"/g, '&quot;')}"
+                        placeholder="${value === null ? '' : ''}"
                     />
                 </div>
-            `).join('');
-        }
+            `;
+        }).join('');
     },
 
-    attachInputHandlers(container, onFieldChange) {
+    updateInputValues(state) {
+        const inputs = this.element.querySelectorAll('input[data-field]');
+        inputs.forEach(input => {
+            const field = input.dataset.field;
+            const value = state.formData[field];
+            const newValue = value === null || value === undefined ? '' : String(value);
+
+            if (input.value !== newValue) {
+                input.value = newValue;
+                input.placeholder = value === null ? '' : '';
+            }
+        });
+    },
+
+    attachInputHandlers(container) {
         container.querySelectorAll('input[data-field]').forEach(input => {
             const field = input.dataset.field;
-            input.addEventListener('input', (e) => {
-                onFieldChange(field, e.target.value === '' ? null : e.target.value);
+
+            const newInput = input.cloneNode(true);
+            input.parentNode.replaceChild(newInput, input);
+
+            newInput.addEventListener('input', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const value = e.target.value === '' ? null : e.target.value;
+
+                this.currentFormData[field] = value;
+                ModalContext.updateFormData(field, value);
+            });
+
+            newInput.addEventListener('blur', (e) => {
+                if (e.target.value === '') {
+                    e.target.placeholder = '';
+                } else {
+                    e.target.placeholder = '';
+                }
             });
         });
     },
@@ -142,6 +208,11 @@ export const Modal = {
             alert('Не выбрана таблица');
             return;
         }
+
+        const submitBtn = this.element.querySelector('#modal-submit');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Сохранение...';
+        submitBtn.disabled = true;
 
         try {
             let response;
@@ -209,6 +280,9 @@ export const Modal = {
         } catch (err) {
             console.error('Error submitting form:', err);
             alert(`Ошибка: ${err.message}`);
+
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
         }
     },
 
@@ -219,5 +293,7 @@ export const Modal = {
         if (this.element) {
             this.element.remove();
         }
+        this.currentFormData = {};
+        this.currentModalData = null;
     }
 };

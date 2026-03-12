@@ -38,15 +38,19 @@ export const TableView = {
         });
 
         // Загружаем начальные данные если есть выбранная таблица
-        if (TableContext.getState().selectedTableName) {
+        const currentState = TableContext.getState();
+        if (currentState.selectedTableName && !currentState.tableData) {
             TableContext.refreshCurrentTable();
+        } else if (currentState.tableData) {
+            // Если данные уже есть, сразу отображаем
+            this.update(currentState);
         }
 
         return section;
     },
 
     update(state) {
-        if (!this.element) return;
+        if (!this.element || !this.element.isConnected) return;
 
         const header = this.element.querySelector('.content-header h3');
         if (header) {

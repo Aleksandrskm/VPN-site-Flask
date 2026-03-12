@@ -4,6 +4,7 @@
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
+    height: fit-content;
 }
 
 .table-lists h3 {
@@ -21,6 +22,8 @@
 .table-list {
     list-style: none;
     padding: 0;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .table-list li {
@@ -29,6 +32,7 @@
     cursor: pointer;
     transition: background 0.3s;
     margin-bottom: 5px;
+    word-break: break-word;
 }
 
 .table-list li:hover {
@@ -40,22 +44,111 @@
     color: white;
 }
 
-/* TableView Module */
+/* TableView Module - ОБНОВЛЕНО */
 .table-view {
     background: white;
     border-radius: 8px;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 95%;
+    min-height: 500px;
+    overflow: hidden;
 }
 
 .table-view h3 {
     color: #495057;
     margin-bottom: 15px;
+    word-break: break-word;
+    flex-shrink: 0;
+}
+
+/* Секция с таблицей - ограничена по высоте и имеет прокрутку */
+.table-section {
+    flex: 1 1 auto;
+    overflow: auto;
+    margin-bottom: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background: white;
+    max-height: calc(100vh - 300px);
+    min-height: 300px;
+}
+
+/* Контейнер таблицы */
+.table-container {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    border-radius: 4px;
+}
+
+/* Сама таблица */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.data-table th {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    cursor: pointer;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 10;
+    box-shadow: 0 1px 0 0 #dee2e6;
+}
+
+.data-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #dee2e6;
+    color: #212529;
+    white-space: nowrap;
+}
+
+.data-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.data-table tbody tr.selected {
+    background-color: #e3f2fd;
+}
+
+/* Секция с кнопками - всегда видна внизу */
+.table-btns-section {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+    background: white;
+    position: relative;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
 }
 
 .table-btns {
-    margin-top: 20px;
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
+}
+
+.table-btns .btn {
+    flex: 1 1 auto;
+    min-width: 120px;
 }
 
 /* FormTask Module */
@@ -77,6 +170,7 @@
     padding: 20px;
     border-radius: 8px;
     border: 2px solid transparent;
+    height: fit-content;
 }
 
 .category.error {
@@ -87,16 +181,29 @@
     margin-bottom: 15px;
     color: #495057;
     font-size: 1rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .category-controls {
     display: flex;
     gap: 10px;
     margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 .category-controls button {
     padding: 5px 10px;
+    font-size: 12px;
+    flex: 1 1 auto;
+}
+
+.category-controls span {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 0;
     font-size: 12px;
 }
 
@@ -106,13 +213,16 @@
     padding: 2px 8px;
     border-radius: 12px;
     font-size: 11px;
-    margin-left: 10px;
+    white-space: nowrap;
 }
 
 .error-message {
     color: #dc3545;
     font-size: 12px;
     margin: 10px 0;
+    padding: 5px;
+    background: #f8d7da;
+    border-radius: 4px;
 }
 
 .error-count {
@@ -137,6 +247,7 @@
     display: flex;
     gap: 20px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .radio-label {
@@ -144,6 +255,7 @@
     align-items: center;
     gap: 5px;
     cursor: pointer;
+    padding: 5px 0;
 }
 
 .once-schedule,
@@ -163,6 +275,9 @@
     background: #e9ecef;
     border-radius: 4px;
     font-family: monospace;
+    font-size: 14px;
+    overflow-x: auto;
+    white-space: nowrap;
 }
 
 .custom-time {
@@ -173,6 +288,7 @@
     display: flex;
     gap: 10px;
     margin-top: 5px;
+    flex-wrap: wrap;
 }
 
 .date-input,
@@ -181,16 +297,23 @@
     border: 1px solid #ced4da;
     border-radius: 4px;
     font-family: monospace;
+    flex: 1 1 auto;
+    min-width: 120px;
 }
 
 .interval-row {
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .interval-input {
     display: flex;
     gap: 10px;
-    margin-top: 5px;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
 }
 
 .number-input {
@@ -205,6 +328,7 @@
     border: 1px solid #ced4da;
     border-radius: 4px;
     background: white;
+    min-width: 80px;
 }
 
 .period-range {
@@ -216,6 +340,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .label {
@@ -240,28 +365,55 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .arms-header h3 {
     color: #495057;
+    font-size: 1rem;
+    flex: 1;
+}
+
+.arms-header .button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .arms-search {
     margin-bottom: 15px;
 }
 
+.arms-search input {
+    width: 100%;
+    padding: 8px 12px;
+}
+
 .arms-checkboxes {
     max-height: 300px;
     overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background: white;
 }
 
 .arm-item {
     padding: 8px 12px;
     border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s;
+}
+
+.arm-item:hover {
+    background-color: #f8f9fa;
 }
 
 .arm-item:last-child {
     border-bottom: none;
+}
+
+.arm-item .checkbox-label {
+    width: 100%;
 }
 
 /* Result Block */
@@ -269,6 +421,7 @@
     padding: 15px;
     border-radius: 4px;
     margin: 20px 0;
+    word-break: break-word;
 }
 
 .result-block.success {
@@ -323,4 +476,476 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.empty-fields {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Data Editor Layout */
+.data-editor {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    min-height: 600px;
+    height: 100%;
+}
+
+.left-column {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.right-column {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: calc(90vh - 120px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Стили для скролла */
+.table-section::-webkit-scrollbar,
+.table-container::-webkit-scrollbar,
+.arms-checkboxes::-webkit-scrollbar,
+.table-list::-webkit-scrollbar,
+.left-column::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-section::-webkit-scrollbar-track,
+.table-container::-webkit-scrollbar-track,
+.arms-checkboxes::-webkit-scrollbar-track,
+.table-list::-webkit-scrollbar-track,
+.left-column::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-section::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb,
+.arms-checkboxes::-webkit-scrollbar-thumb,
+.table-list::-webkit-scrollbar-thumb,
+.left-column::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-section::-webkit-scrollbar-thumb:hover,
+.table-container::-webkit-scrollbar-thumb:hover,
+.arms-checkboxes::-webkit-scrollbar-thumb:hover,
+.table-list::-webkit-scrollbar-thumb:hover,
+.left-column::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Адаптивность для планшетов */
+@media (max-width: 992px) {
+    .data-editor {
+        grid-template-columns: 250px 1fr;
+        gap: 15px;
+        min-height: 500px;
+    }
+
+    .categories-row {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .right-column {
+        height: calc(100vh - 150px);
+    }
+
+    .table-view {
+        min-height: 450px;
+    }
+
+    .table-section {
+        max-height: calc(100vh - 350px);
+        min-height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-lists {
+        padding: 15px;
+    }
+
+    .table-view {
+        padding: 15px;
+        min-height: 400px;
+    }
+
+    .form-task {
+        padding: 20px;
+    }
+
+    .category {
+        padding: 15px;
+    }
+
+    .schedule-block {
+        padding: 15px;
+    }
+
+    .arms-list {
+        padding: 15px;
+    }
+
+    .data-editor {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        min-height: auto;
+        height: auto;
+    }
+
+    .left-column {
+        position: static;
+        top: auto;
+        max-height: none;
+        height: auto;
+    }
+
+    .right-column {
+        height: 70vh;
+        min-height: 500px;
+    }
+
+    .table-view {
+        height: 100%;
+        min-height: 450px;
+    }
+
+    .table-section {
+        max-height: calc(70vh - 150px);
+        min-height: 250px;
+    }
+
+    .table-btns .btn {
+        min-width: 100px;
+    }
+
+    .current-time {
+        font-size: 12px;
+        margin-left: 0;
+    }
+
+    .date-time-inputs {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .date-input,
+    .time-input {
+        width: 100%;
+    }
+
+    .interval-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .interval-input {
+        width: 100%;
+    }
+
+    .number-input {
+        flex: 1;
+    }
+
+    .range-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .range-row .date-time-inputs {
+        width: 100%;
+    }
+
+    .arms-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .arms-header .button-group {
+        width: 100%;
+    }
+
+    .arms-header .button-group button {
+        flex: 1;
+    }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 480px) {
+    .table-lists {
+        padding: 12px;
+    }
+
+    .table-view {
+        padding: 12px;
+        min-height: 350px;
+    }
+
+    .form-task {
+        padding: 15px;
+    }
+
+    .categories-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .category {
+        padding: 12px;
+    }
+
+    .category h3 {
+        font-size: 0.9rem;
+    }
+
+    .category-controls {
+        flex-direction: column;
+    }
+
+    .category-controls button {
+        width: 100%;
+    }
+
+    .schedule-block {
+        padding: 12px;
+    }
+
+    .schedule-type {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .once-schedule,
+    .periodic-schedule {
+        padding: 12px;
+    }
+
+    .radio-group {
+        margin-bottom: 12px;
+    }
+
+    .custom-time {
+        margin-left: 0;
+    }
+
+    .current-time {
+        white-space: normal;
+        word-break: break-all;
+    }
+
+    .interval-input {
+        flex-direction: column;
+    }
+
+    .number-input,
+    .unit-select {
+        width: 100%;
+    }
+
+    .arms-list {
+        padding: 12px;
+    }
+
+    .arms-header .button-group {
+        flex-direction: column;
+    }
+
+    .arms-header .button-group button {
+        width: 100%;
+    }
+
+    .result-block {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .submit-button {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .loading-container,
+    .error-container {
+        padding: 20px;
+    }
+
+    .empty-fields {
+        padding: 20px;
+    }
+
+    .right-column {
+        height: 60vh;
+        min-height: 400px;
+    }
+
+    .table-view {
+        min-height: 350px;
+    }
+
+    .table-section {
+        max-height: calc(60vh - 130px);
+        min-height: 200px;
+        margin-bottom: 15px;
+    }
+
+    .table-btns-section {
+        padding-top: 12px;
+    }
+
+    .table-btns {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .table-btns .btn {
+        min-width: calc(50% - 4px);
+        flex: 1 1 auto;
+        font-size: 13px;
+        padding: 10px 8px;
+    }
+}
+
+/* Адаптивность для очень маленьких экранов */
+@media (max-width: 380px) {
+    .table-btns {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .table-btns .btn {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .right-column {
+        height: 55vh;
+        min-height: 350px;
+    }
+
+    .table-section {
+        max-height: calc(55vh - 140px);
+        min-height: 150px;
+    }
+
+    .table-view {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 320px) {
+    .table-lists h3 {
+        font-size: 1rem;
+    }
+
+    .table-view h3 {
+        font-size: 1rem;
+    }
+
+    .category h3 {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .error-badge {
+        align-self: flex-start;
+    }
+
+    .right-column {
+        height: 50vh;
+        min-height: 300px;
+        padding: 12px;
+    }
+
+    .table-view {
+        padding: 10px;
+        min-height: 280px;
+    }
+
+    .table-section {
+        margin-bottom: 12px;
+    }
+
+    .table-btns-section {
+        padding-top: 10px;
+    }
+
+    .table-btns .btn {
+        padding: 8px;
+        font-size: 12px;
+    }
+}
+
+/* Альбомная ориентация на мобильных */
+@media (max-width: 896px) and (orientation: landscape) {
+    .right-column {
+        height: 70vh;
+    }
+
+    .table-section {
+        max-height: calc(70vh - 140px);
+    }
+
+    .left-column {
+        max-height: 70vh;
+    }
+}
+
+/* Улучшения для touch-устройств */
+@media (hover: none) and (pointer: coarse) {
+    .btn,
+    .table-list li,
+    .data-table tbody tr,
+    .checkbox-label,
+    .radio-label {
+        cursor: default;
+        -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    }
+
+    .btn:active,
+    .table-list li:active,
+    .data-table tbody tr:active {
+        opacity: 0.7;
+        transition: opacity 0.1s;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Увеличиваем область касания для кнопок на мобильных */
+    .btn {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table-btns .btn {
+        min-height: 30px;
+    }
 }
