@@ -1,4 +1,6 @@
-const Timer = {
+import { DateUtils } from '../utils/dateUtils.js';
+
+export const Timer = {
     element: null,
     intervalId: null,
 

@@ -1,57 +1,63 @@
-const TasksContext = {
-    state: {
-        startDate: DateUtils.getDateForInput(),
-        startTime: DateUtils.getTimeForInput(),
-        scheduleType: 'once',
-        interval: { value: 120, unit: 'minutes' },
-        startDateTime: {
-            date: DateUtils.getDateForInput(),
-            time: DateUtils.getTimeForInput()
-        },
-        endDateTime: {
-            date: DateUtils.getDateForInput(DateUtils.addDays(new Date(), 5)),
-            time: DateUtils.getTimeForInput()
-        },
-        taskConfig: {
-            vpns: [],
-            urls: [],
-            programs: []
-        },
-        selectedArms: [],
-        selectedItems: {
-            vpns: [],
-            urls: [],
-            programs: []
-        },
-        validationErrors: {
-            vpns: false,
-            urls: false,
-            programs: false,
-            arms: false
-        },
-        isLoading: false,
-        isConfigLoading: true,
-        tasksResult: null,
-        apiError: null
-    },
+import { taskApi } from '../api/taskApi.js';
+import { armApi } from '../api/armApi.js';
+import { DateUtils } from '../utils/dateUtils.js';
 
-    listeners: [],
+class TasksContextClass {
+    constructor() {
+        this.state = {
+            startDate: DateUtils.getDateForInput(),
+            startTime: DateUtils.getTimeForInput(),
+            scheduleType: 'once',
+            interval: { value: 120, unit: 'minutes' },
+            startDateTime: {
+                date: DateUtils.getDateForInput(),
+                time: DateUtils.getTimeForInput()
+            },
+            endDateTime: {
+                date: DateUtils.getDateForInput(DateUtils.addDays(new Date(), 5)),
+                time: DateUtils.getTimeForInput()
+            },
+            taskConfig: {
+                vpns: [],
+                urls: [],
+                programs: []
+            },
+            selectedArms: [],
+            selectedItems: {
+                vpns: [],
+                urls: [],
+                programs: []
+            },
+            validationErrors: {
+                vpns: false,
+                urls: false,
+                programs: false,
+                arms: false
+            },
+            isLoading: false,
+            isConfigLoading: true,
+            tasksResult: null,
+            apiError: null
+        };
+        this.listeners = [];
+        this.loadConfig();
+    }
 
     subscribe(listener) {
         this.listeners.push(listener);
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
-    },
+    }
 
     notify() {
         this.listeners.forEach(listener => listener(this.state));
-    },
+    }
 
     setState(newState) {
         this.state = { ...this.state, ...newState };
         this.notify();
-    },
+    }
 
     async loadConfig() {
         this.setState({ isConfigLoading: true, apiError: null });
@@ -78,7 +84,7 @@ const TasksContext = {
                 isConfigLoading: false
             });
         }
-    },
+    }
 
     handleCheckboxChange(category, item, checked) {
         const newSelectedItems = { ...this.state.selectedItems };
@@ -95,15 +101,15 @@ const TasksContext = {
                 [category]: newCategory.length === 0
             }
         });
-    },
+    }
 
     handleDateChange(date) {
         this.setState({ startDate: date });
-    },
+    }
 
     handleTimeChange(time) {
         this.setState({ startTime: time });
-    },
+    }
 
     handleSelectAll(category, items) {
         this.setState({
@@ -116,7 +122,7 @@ const TasksContext = {
                 [category]: false
             }
         });
-    },
+    }
 
     handleClearAll(category) {
         this.setState({
@@ -129,11 +135,11 @@ const TasksContext = {
                 [category]: true
             }
         });
-    },
+    }
 
     isChecked(category, item) {
         return this.state.selectedItems[category]?.includes(item) || false;
-    },
+    }
 
     handleArmsChange(selected) {
         this.setState({
@@ -143,11 +149,11 @@ const TasksContext = {
                 arms: selected.length === 0
             }
         });
-    },
+    }
 
     handleScheduleTypeChange(type) {
         this.setState({ scheduleType: type });
-    },
+    }
 
     handleIntervalChange(field, value) {
         this.setState({
@@ -156,7 +162,7 @@ const TasksContext = {
                 [field]: value
             }
         });
-    },
+    }
 
     handleStartDateTimeChange(field, value) {
         this.setState({
@@ -165,7 +171,7 @@ const TasksContext = {
                 [field]: value
             }
         });
-    },
+    }
 
     handleEndDateTimeChange(field, value) {
         this.setState({
@@ -174,7 +180,7 @@ const TasksContext = {
                 [field]: value
             }
         });
-    },
+    }
 
     validateForm() {
         const errors = {
@@ -186,7 +192,7 @@ const TasksContext = {
 
         this.setState({ validationErrors: errors });
         return !Object.values(errors).some(error => error);
-    },
+    }
 
     async submitForm() {
         if (!this.validateForm()) {
@@ -370,7 +376,7 @@ const TasksContext = {
         } finally {
             this.setState({ isLoading: false });
         }
-    },
+    }
 
     resetForm() {
         const fiveDaysLater = DateUtils.addDays(new Date(), 5);
@@ -403,11 +409,11 @@ const TasksContext = {
                 time: DateUtils.getTimeForInput()
             }
         });
-    },
+    }
 
     getState() {
         return this.state;
     }
-};
+}
 
-// Автоматически загружаем конфиг при создании контекста
+export const TasksContext = new TasksContextClass();

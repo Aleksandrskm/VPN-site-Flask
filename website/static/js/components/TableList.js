@@ -1,4 +1,6 @@
-const TableList = {
+import { TableContext } from '../contexts/TableContext.js';
+
+export const TableList = {
     create(tables) {
         const ul = document.createElement('ul');
         ul.className = 'table-list';

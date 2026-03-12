@@ -1,4 +1,6 @@
-const taskApi = {
+import { API_CONFIG, ENDPOINTS } from './config.js';
+
+export const taskApi = {
     async getConfig() {
         try {
             const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.TASK.DEFAULT_CONFIG}`, {

@@ -1,4 +1,6 @@
-const dbApi = {
+import { API_CONFIG, ENDPOINTS } from './config.js';
+
+export const dbApi = {
     async editRow(tableName, newRowData) {
         try {
             const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.DB.EDIT_ROW(tableName)}`, {

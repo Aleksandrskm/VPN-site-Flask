@@ -1,4 +1,6 @@
-const ScheduleBlock = {
+import { DateUtils } from '../utils/dateUtils.js';
+
+export const ScheduleBlock = {
     create({
                startDate,
                startTime,
@@ -51,6 +53,7 @@ const ScheduleBlock = {
         // Обработчики для радио кнопок
         div.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
+                e.preventDefault();
                 onScheduleTypeChange(e.target.value);
                 this.renderContent(contentDiv, {
                     startDate,
@@ -82,6 +85,7 @@ const ScheduleBlock = {
     },
 
     renderOnceSchedule({ startDate, startTime }) {
+        const now = new Date();
         return `
             <div class="once-schedule">
                 <div class="radio-group">
@@ -90,7 +94,7 @@ const ScheduleBlock = {
                         <span>От текущего времени</span>
                     </label>
                     <div class="current-time">
-                        Начало: ${new Date().toLocaleString('ru-RU', {
+                        Начало: ${now.toLocaleString('ru-RU', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -177,6 +181,7 @@ const ScheduleBlock = {
         });
     },
 
+    // В методе attachPeriodicHandlers добавьте e.preventDefault()
     attachPeriodicHandlers(container, props) {
         const intervalValue = container.querySelector('#interval-value');
         const intervalUnit = container.querySelector('#interval-unit');
@@ -186,27 +191,45 @@ const ScheduleBlock = {
         const endTime = container.querySelector('#period-end-time');
 
         if (intervalValue) {
-            intervalValue.addEventListener('change', (e) => props.onIntervalChange('value', e.target.value));
+            intervalValue.addEventListener('change', (e) => {
+                e.preventDefault(); // ДОБАВЛЯЕМ
+                props.onIntervalChange('value', e.target.value);
+            });
         }
 
         if (intervalUnit) {
-            intervalUnit.addEventListener('change', (e) => props.onIntervalChange('unit', e.target.value));
+            intervalUnit.addEventListener('change', (e) => {
+                e.preventDefault(); // ДОБАВЛЯЕМ
+                props.onIntervalChange('unit', e.target.value);
+            });
         }
 
         if (startDate) {
-            startDate.addEventListener('change', (e) => props.onStartDateTimeChange('date', e.target.value));
+            startDate.addEventListener('change', (e) => {
+                e.preventDefault(); // ДОБАВЛЯЕМ
+                props.onStartDateTimeChange('date', e.target.value);
+            });
         }
 
         if (startTime) {
-            startTime.addEventListener('change', (e) => props.onStartDateTimeChange('time', e.target.value));
+            startTime.addEventListener('change', (e) => {
+                e.preventDefault(); // ДОБАВЛЯЕМ
+                props.onStartDateTimeChange('time', e.target.value);
+            });
         }
 
         if (endDate) {
-            endDate.addEventListener('change', (e) => props.onEndDateTimeChange('date', e.target.value));
+            endDate.addEventListener('change', (e) => {
+                e.preventDefault(); // ДОБАВЛЯЕМ
+                props.onEndDateTimeChange('date', e.target.value);
+            });
         }
 
         if (endTime) {
-            endTime.addEventListener('change', (e) => props.onEndDateTimeChange('time', e.target.value));
+            endTime.addEventListener('change', (e) => {
+                e.preventDefault(); // ДОБАВЛЯЕМ
+                props.onEndDateTimeChange('time', e.target.value);
+            });
         }
     }
 };

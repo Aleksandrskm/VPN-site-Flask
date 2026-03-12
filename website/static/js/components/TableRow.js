@@ -1,4 +1,6 @@
-const TableRow = {
+import { ModalContext } from '../contexts/ModalContext.js';
+
+export const TableRow = {
     create(row, isSelected, index, onClick) {
         const tr = document.createElement('tr');
         if (isSelected) {

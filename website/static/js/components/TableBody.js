@@ -1,4 +1,7 @@
-const TableBody = {
+import { TableRow } from './TableRow.js';
+import { ModalContext } from '../contexts/ModalContext.js';
+
+export const TableBody = {
     create(rows, selectedRow, onRowClick) {
         const tbody = document.createElement('tbody');
 

@@ -1,4 +1,4 @@
-const TableHead = {
+export const TableHead = {
     create(columns) {
         const thead = document.createElement('thead');
         const tr = document.createElement('tr');

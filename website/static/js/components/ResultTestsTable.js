@@ -1,4 +1,5 @@
-const ResultTestsTable = {
+// js/components/ResultTestsTable.js
+export const ResultTestsTable = {
     element: null,
     unsubscribe: null,
 
@@ -6,41 +7,81 @@ const ResultTestsTable = {
         const section = document.createElement('section');
         section.className = 'result-tests-section';
 
+        // Создаем пустую страницу с заглушкой
+        section.innerHTML = `
+            <div class="empty-results">
+                <div class="empty-icon">📊</div>
+                <h2>Результаты тестирования</h2>
+                <p>Здесь будут отображаться результаты тестов</p>
+                <p class="coming-soon">В разработке</p>
+            </div>
+        `;
+
         this.element = section;
 
-        try {
-            const { tableInfo, tableData } = await getFullTableData('PR_ZAD');
-            TableContext.selectTestsTable('PR_ZAD', 'Результаты тестирований');
-
-            const table = Table.create(tableInfo, tableData);
-            section.appendChild(table);
-
-        } catch (error) {
-            console.error('Error loading result tests:', error);
-            section.innerHTML = '<div class="error">Ошибка загрузки данных</div>';
-        }
-
-        // Подписка на обновления
-        this.unsubscribe = TableContext.subscribe((state) => {
-            if (state.selectedTableName === 'PR_ZAD' && state.tableData) {
-                this.update(state);
-            }
-        });
+        // Добавляем стили для пустой страницы
+        this.addStyles();
 
         return section;
     },
 
-    update(state) {
-        if (!this.element) return;
+    addStyles() {
+        // Проверяем, есть ли уже стили
+        if (document.getElementById('results-empty-styles')) return;
 
-        this.element.innerHTML = '';
-        const table = Table.create(state.tableInfo, state.tableData);
-        this.element.appendChild(table);
+        const style = document.createElement('style');
+        style.id = 'results-empty-styles';
+        style.textContent = `
+            .empty-results {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 400px;
+                text-align: center;
+                background: white;
+                border-radius: 8px;
+                padding: 40px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .empty-icon {
+                font-size: 64px;
+                margin-bottom: 20px;
+                opacity: 0.5;
+            }
+            
+            .empty-results h2 {
+                color: #333;
+                margin-bottom: 10px;
+                font-size: 24px;
+            }
+            
+            .empty-results p {
+                color: #666;
+                margin-bottom: 5px;
+                font-size: 16px;
+            }
+            
+            .empty-results .coming-soon {
+                margin-top: 20px;
+                color: #999;
+                font-style: italic;
+                font-size: 14px;
+            }
+        `;
+
+        document.head.appendChild(style);
     },
 
     destroy() {
         if (this.unsubscribe) {
             this.unsubscribe();
+        }
+        // Удаляем стили при уничтожении компонента
+        const style = document.getElementById('results-empty-styles');
+        if (style) {
+            style.remove();
         }
     }
 };

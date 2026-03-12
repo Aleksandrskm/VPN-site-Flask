@@ -1,279 +1,406 @@
-const FormTask = {
+// js/components/FormTask.js
+import { TasksContext } from '../contexts/TasksContext.js';
+import { ArmsList } from './ArmsList.js';
+import { ScheduleBlock } from './ScheduleBlock.js';
+
+export const FormTask = {
     element: null,
     unsubscribe: null,
 
-    async create() {
+    // Сохраняем ссылки на динамические элементы
+    components: {
+        armsList: null,
+        categoriesRow: null,
+        scheduleBlock: null,
+        resultBlock: null,
+        submitButton: null
+    },
+
+    create() {
         const section = document.createElement('section');
         section.className = 'page-section';
 
-        // Показываем загрузку сразу
-        section.innerHTML = `
-            <div class="loading-container">
-                <div class="spinner"></div>
-                <p>Подготовка формы...</p>
-            </div>
-        `;
-
-        this.element = section;
-
-        // Загружаем конфиг перед рендерингом
-        console.log('FormTask.create: загружаем конфиг...');
-        await TasksContext.loadConfig();
-        console.log('FormTask.create: конфиг загружен');
-
-        // Очищаем и создаем форму
-        section.innerHTML = '';
-
         const form = document.createElement('form');
         form.className = 'form-task';
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        form.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+
         section.appendChild(form);
+        this.element = section;
 
         // Подписываемся на изменения контекста
         this.unsubscribe = TasksContext.subscribe((state) => {
-            this.render(state);
+            this.updateSmart(state); // Используем умное обновление
         });
 
         // Первоначальный рендер
-        this.render(TasksContext.getState());
+        this.renderInitial(TasksContext.getState());
 
         return section;
     },
 
-    render(state) {
-        if (!this.element) return;
-
+    // Первоначальный рендер всей формы
+    async renderInitial(state) {
         const form = this.element.querySelector('.form-task');
         if (!form) return;
 
-        // Проверяем загрузку конфига
         if (state.isConfigLoading) {
-            form.innerHTML = `
-                <div class="loading-container">
-                    <div class="spinner"></div>
-                    <p>Загрузка конфигурации задачи...</p>
-                </div>
-            `;
+            form.innerHTML = this.getLoadingTemplate();
             return;
         }
 
-        // Проверяем ошибки загрузки
-        if (state.apiError) {
-            form.innerHTML = `
-                <div class="error-container">
-                    <h3>Ошибка загрузки</h3>
-                    <p>${state.apiError}</p>
-                    <p>Проверьте подключение к серверу: ${API_CONFIG.baseUrl}</p>
-                    <div class="button-group">
-                        <button class="btn btn-primary" onclick="location.reload()">Обновить страницу</button>
-                        <button class="btn btn-secondary" onclick="FormTask.retryLoad()">Повторить загрузку</button>
-                    </div>
-                </div>
-            `;
+        if (state.apiError && !state.taskConfig.vpns?.length) {
+            form.innerHTML = this.getErrorTemplate(state);
+            this.attachErrorHandlers(form);
             return;
         }
 
-        // Проверяем наличие данных
-        if (!state.taskConfig ||
-            (!state.taskConfig.vpns?.length &&
-                !state.taskConfig.urls?.length &&
-                !state.taskConfig.programs?.length)) {
-
-            form.innerHTML = `
-                <div class="info-container">
-                    <p>Нет данных для отображения</p>
-                    <button class="btn btn-primary" onclick="FormTask.retryLoad()">
-                        Загрузить конфигурацию
-                    </button>
-                </div>
-            `;
-            return;
-        }
-
-        // Если все хорошо, рендерим форму
         form.innerHTML = '';
 
-        // Добавляем ArmsList
-        this.renderArmsList(form, state);
+        // ВАЖНО: Ждем создания ArmsList
+        const armsList = await ArmsList.create(
+            state.selectedArms,
+            (selected) => TasksContext.handleArmsChange(selected),
+            state.validationErrors.arms
+        );
+        this.components.armsList = armsList;
+        form.appendChild(armsList);
 
-        // Добавляем категории
-        this.renderCategories(form, state);
+        this.components.categoriesRow = this.createCategoriesRow(state);
+        form.appendChild(this.components.categoriesRow);
 
-        // Добавляем ScheduleBlock
-        this.renderScheduleBlock(form, state);
+        this.components.scheduleBlock = ScheduleBlock.create({
+            startDate: state.startDate,
+            startTime: state.startTime,
+            onDateChange: (date) => TasksContext.handleDateChange(date),
+            onTimeChange: (time) => TasksContext.handleTimeChange(time),
+            scheduleType: state.scheduleType,
+            onScheduleTypeChange: (type) => TasksContext.handleScheduleTypeChange(type),
+            interval: state.interval,
+            onIntervalChange: (field, value) => TasksContext.handleIntervalChange(field, value),
+            startDateTime: state.startDateTime,
+            onStartDateTimeChange: (field, value) => TasksContext.handleStartDateTimeChange(field, value),
+            endDateTime: state.endDateTime,
+            onEndDateTimeChange: (field, value) => TasksContext.handleEndDateTimeChange(field, value)
+        });
+        form.appendChild(this.components.scheduleBlock);
 
-        // Добавляем результат если есть
         if (state.tasksResult) {
-            this.renderResult(form, state.tasksResult);
+            this.components.resultBlock = this.createResultBlock(state.tasksResult);
+            form.appendChild(this.components.resultBlock);
         }
 
-        // Добавляем кнопку отправки
-        this.renderSubmitButton(form, state);
+        this.components.submitButton = this.createSubmitButton(state);
+        form.appendChild(this.components.submitButton);
     },
 
-    // Метод для повторной загрузки
-    static retryLoad() {
-    const formTask = document.querySelector('.page-section');
-    if (formTask && FormTask.instance) {
-        FormTask.instance.loadConfigAndRender();
-    }
-},
+    // Умное обновление только изменяющихся частей
+    updateSmart(state) {
+        const form = this.element?.querySelector('.form-task');
+        if (!form) return;
 
-async loadConfigAndRender() {
-    if (!this.element) return;
+        // Проверяем состояние загрузки
+        if (state.isConfigLoading) {
+            if (!this.isLoadingTemplateShown(form)) {
+                form.innerHTML = this.getLoadingTemplate();
+            }
+            return;
+        }
 
-    this.element.innerHTML = `
-            <div class="loading-container">
-                <div class="spinner"></div>
-                <p>Загрузка конфигурации...</p>
-            </div>
-        `;
+        // Проверяем ошибки
+        if (state.apiError && !state.taskConfig.vpns?.length) {
+            if (!this.isErrorTemplateShown(form)) {
+                form.innerHTML = this.getErrorTemplate(state);
+                this.attachErrorHandlers(form);
+            }
+            return;
+        }
 
-    await TasksContext.resetConfig(); // Сбрасываем флаг загрузки
-    await TasksContext.loadConfig();
+        // Если форма пустая или это первый рендер после загрузки
+        if (form.children.length === 0) {
+            this.renderInitial(state);
+            return;
+        }
 
-    // Пересоздаем форму
-    this.element.innerHTML = '';
-    const form = document.createElement('form');
-    form.className = 'form-task';
-    this.element.appendChild(form);
+        // Инкрементальное обновление каждого компонента
+        this.updateArmsList(state);
+        this.updateCategories(state);
+        this.updateScheduleBlock(state);
+        this.updateResult(state);
+        this.updateSubmitButton(state);
+    },
 
-    this.render(TasksContext.getState());
-},
+    async updateArmsList(state) {
+        if (this.components.armsList) {
+            // Используем метод update если он есть
+            if (this.components.armsList.update) {
+                this.components.armsList.update(state.selectedArms, state.validationErrors.arms);
+            } else {
+                // Иначе создаем новый
+                const newArmsList = await ArmsList.create(
+                    state.selectedArms,
+                    (selected) => TasksContext.handleArmsChange(selected),
+                    state.validationErrors.arms
+                );
+                this.components.armsList.replaceWith(newArmsList);
+                this.components.armsList = newArmsList;
+            }
+        }
+    },
 
-async renderArmsList(form, state) {
-    const armsList = await ArmsList.create(
-        state.selectedArms,
-        (selected) => TasksContext.handleArmsChange(selected),
-        state.validationErrors.arms
-    );
-    form.appendChild(armsList);
-},
+    updateCategories(state) {
+        if (this.components.categoriesRow) {
+            const newCategoriesRow = this.createCategoriesRow(state);
+            this.components.categoriesRow.replaceWith(newCategoriesRow);
+            this.components.categoriesRow = newCategoriesRow;
+        }
+    },
 
-renderCategories(form, state) {
-    const categoriesRow = document.createElement('section');
-    categoriesRow.className = 'categories-row';
+    updateScheduleBlock(state) {
+        if (this.components.scheduleBlock) {
+            const newScheduleBlock = ScheduleBlock.create({
+                startDate: state.startDate,
+                startTime: state.startTime,
+                onDateChange: (date) => TasksContext.handleDateChange(date),
+                onTimeChange: (time) => TasksContext.handleTimeChange(time),
+                scheduleType: state.scheduleType,
+                onScheduleTypeChange: (type) => TasksContext.handleScheduleTypeChange(type),
+                interval: state.interval,
+                onIntervalChange: (field, value) => TasksContext.handleIntervalChange(field, value),
+                startDateTime: state.startDateTime,
+                onStartDateTimeChange: (field, value) => TasksContext.handleStartDateTimeChange(field, value),
+                endDateTime: state.endDateTime,
+                onEndDateTimeChange: (field, value) => TasksContext.handleEndDateTimeChange(field, value)
+            });
+            this.components.scheduleBlock.replaceWith(newScheduleBlock);
+            this.components.scheduleBlock = newScheduleBlock;
+        }
+    },
 
-    const getCategoryTitle = (category) => {
-        const titles = {
-            vpns: 'VPN - приложения',
-            urls: 'Сайты (URL)',
-            programs: 'Приложения'
+    updateResult(state) {
+        const form = this.element.querySelector('.form-task');
+        if (!form) return;
+
+        if (state.tasksResult) {
+            if (this.components.resultBlock) {
+                // Обновляем существующий блок результата
+                const newResultBlock = this.createResultBlock(state.tasksResult);
+                this.components.resultBlock.replaceWith(newResultBlock);
+                this.components.resultBlock = newResultBlock;
+            } else {
+                // Создаем новый блок результата
+                this.components.resultBlock = this.createResultBlock(state.tasksResult);
+                // Вставляем перед кнопкой submit
+                if (this.components.submitButton) {
+                    form.insertBefore(this.components.resultBlock, this.components.submitButton);
+                } else {
+                    form.appendChild(this.components.resultBlock);
+                }
+            }
+        } else {
+            // Удаляем блок результата если его нет в стейте
+            if (this.components.resultBlock) {
+                this.components.resultBlock.remove();
+                this.components.resultBlock = null;
+            }
+        }
+    },
+
+    updateSubmitButton(state) {
+        if (this.components.submitButton) {
+            this.components.submitButton.disabled = state.isLoading || state.isConfigLoading;
+            this.components.submitButton.textContent = state.isLoading ? 'Отправка...' : 'Поставить задачу';
+        }
+    },
+
+    createCategoriesRow(state) {
+        const categoriesRow = document.createElement('section');
+        categoriesRow.className = 'categories-row';
+
+        const getCategoryTitle = (category) => {
+            const titles = {
+                vpns: 'VPN - приложения',
+                urls: 'Сайты (URL)',
+                programs: 'Приложения'
+            };
+            return titles[category] || category.toUpperCase();
         };
-        return titles[category] || category.toUpperCase();
-    };
 
-    Object.entries(state.taskConfig).forEach(([category, items]) => {
-        if (!items || items.length === 0) return; // Пропускаем пустые категории
+        Object.entries(state.taskConfig).forEach(([category, items]) => {
+            if (!items || items.length === 0) return;
 
-        const article = document.createElement('article');
-        article.className = `category ${state.validationErrors[category] ? 'error' : ''}`;
+            const article = document.createElement('article');
+            article.className = `category ${state.validationErrors[category] ? 'error' : ''}`;
+            article.setAttribute('data-category', category);
 
-        const title = document.createElement('h3');
-        title.innerHTML = `
+            const title = document.createElement('h3');
+            title.innerHTML = `
                 ${getCategoryTitle(category)}
                 ${state.validationErrors[category] ? '<span class="error-badge">Обязательно для выбора</span>' : ''}
             `;
-        article.appendChild(title);
+            article.appendChild(title);
 
-        const controls = document.createElement('div');
-        controls.className = 'category-controls';
-        controls.innerHTML = `
-                <button type="button" class="btn btn-secondary btn-sm">Выбрать все</button>
-                <button type="button" class="btn btn-secondary btn-sm">Снять все</button>
-                <span class="${state.validationErrors[category] ? 'error-count' : ''}">
-                    Выбрано: ${state.selectedItems[category]?.length || 0}/${items.length}
-                </span>
-            `;
-        article.appendChild(controls);
+            const controls = document.createElement('div');
+            controls.className = 'category-controls';
 
-        if (state.validationErrors[category]) {
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'error-message';
-            errorMsg.textContent = 'Выберите хотя бы один элемент в этой категории';
-            article.appendChild(errorMsg);
-        }
-
-        const list = document.createElement('ul');
-        list.className = 'items-list';
-
-        items.forEach((item, index) => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                    <label class="checkbox-label">
-                        <input type="checkbox" ${state.isChecked(category, item) ? 'checked' : ''}>
-                        <span class="item-text">${item}</span>
-                    </label>
-                `;
-
-            const checkbox = li.querySelector('input');
-            checkbox.addEventListener('change', (e) => {
-                TasksContext.handleCheckboxChange(category, item, e.target.checked);
+            const selectAllBtn = document.createElement('button');
+            selectAllBtn.type = 'button';
+            selectAllBtn.className = 'btn btn-secondary btn-sm';
+            selectAllBtn.textContent = 'Выбрать все';
+            selectAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                TasksContext.handleSelectAll(category, items);
             });
 
-            list.appendChild(li);
+            const clearAllBtn = document.createElement('button');
+            clearAllBtn.type = 'button';
+            clearAllBtn.className = 'btn btn-secondary btn-sm';
+            clearAllBtn.textContent = 'Снять все';
+            clearAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                TasksContext.handleClearAll(category);
+            });
+
+            const countSpan = document.createElement('span');
+            countSpan.className = state.validationErrors[category] ? 'error-count' : '';
+            countSpan.textContent = `Выбрано: ${state.selectedItems[category]?.length || 0}/${items.length}`;
+
+            controls.appendChild(selectAllBtn);
+            controls.appendChild(clearAllBtn);
+            controls.appendChild(countSpan);
+            article.appendChild(controls);
+
+            if (state.validationErrors[category]) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'error-message';
+                errorMsg.textContent = 'Выберите хотя бы один элемент в этой категории';
+                article.appendChild(errorMsg);
+            }
+
+            const list = document.createElement('ul');
+            list.className = 'items-list';
+
+            items.forEach((item, index) => {
+                const li = document.createElement('li');
+
+                const label = document.createElement('label');
+                label.className = 'checkbox-label';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `${category}-${index}`;
+                checkbox.checked = state.selectedItems[category]?.includes(item) || false;
+
+                checkbox.addEventListener('change', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    TasksContext.handleCheckboxChange(category, item, e.target.checked);
+                });
+
+                const span = document.createElement('span');
+                span.className = 'item-text';
+                span.textContent = item;
+
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                li.appendChild(label);
+                list.appendChild(li);
+            });
+
+            article.appendChild(list);
+            categoriesRow.appendChild(article);
         });
 
-        article.appendChild(list);
-        categoriesRow.appendChild(article);
+        return categoriesRow;
+    },
 
-        // Обработчики для кнопок
-        const [selectAllBtn, clearAllBtn] = controls.querySelectorAll('button');
-        selectAllBtn.addEventListener('click', () => TasksContext.handleSelectAll(category, items));
-        clearAllBtn.addEventListener('click', () => TasksContext.handleClearAll(category));
-    });
+    createResultBlock(result) {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = `result-block ${result.success ? 'success' : 'error'}`;
+        resultDiv.textContent = result.success
+            ? `${result.message || ''}`
+            : `Ошибка: ${result.error}`;
+        return resultDiv;
+    },
 
-    form.appendChild(categoriesRow);
-},
+    createSubmitButton(state) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'submit-button';
+        button.disabled = state.isLoading || state.isConfigLoading;
+        button.textContent = state.isLoading ? 'Отправка...' : 'Поставить задачу';
 
-renderScheduleBlock(form, state) {
-    const scheduleBlock = ScheduleBlock.create({
-        startDate: state.startDate,
-        startTime: state.startTime,
-        onDateChange: (date) => TasksContext.handleDateChange(date),
-        onTimeChange: (time) => TasksContext.handleTimeChange(time),
-        scheduleType: state.scheduleType,
-        onScheduleTypeChange: (type) => TasksContext.handleScheduleTypeChange(type),
-        interval: state.interval,
-        onIntervalChange: (field, value) => TasksContext.handleIntervalChange(field, value),
-        startDateTime: state.startDateTime,
-        onStartDateTimeChange: (field, value) => TasksContext.handleStartDateTimeChange(field, value),
-        endDateTime: state.endDateTime,
-        onEndDateTimeChange: (field, value) => TasksContext.handleEndDateTimeChange(field, value)
-    });
+        button.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            await TasksContext.submitForm();
+        });
 
-    form.appendChild(scheduleBlock);
-},
+        return button;
+    },
 
-renderResult(form, result) {
-    const resultDiv = document.createElement('div');
-    resultDiv.className = `result-block ${result.success ? 'success' : 'error'}`;
-    resultDiv.textContent = result.success
-        ? `${result.message || ''}`
-        : `Ошибка: ${result.error}`;
-    form.appendChild(resultDiv);
-},
+    getLoadingTemplate() {
+        return `
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>Загрузка конфигурации задачи...</p>
+            </div>
+        `;
+    },
 
-renderSubmitButton(form, state) {
-    const button = document.createElement('button');
-    button.type = 'submit';
-    button.className = 'submit-button';
-    button.disabled = state.isLoading || state.isConfigLoading;
-    button.textContent = state.isLoading ? 'Отправка...' : 'Поставить задачу';
+    getErrorTemplate(state) {
+        return `
+            <div class="error-container">
+                <h3>Ошибка загрузки</h3>
+                <p>${state.apiError}</p>
+                <button type="button" class="btn btn-primary" id="reload-btn">Повторить</button>
+            </div>
+        `;
+    },
 
-    button.addEventListener('click', async (e) => {
-        e.preventDefault();
-        await TasksContext.submitForm();
-    });
+    attachErrorHandlers(form) {
+        const reloadBtn = form.querySelector('#reload-btn');
+        if (reloadBtn) {
+            reloadBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                location.reload();
+            });
+        }
+    },
 
-    form.appendChild(button);
-},
+    isLoadingTemplateShown(form) {
+        return form.children.length === 1 && form.querySelector('.loading-container');
+    },
 
-destroy() {
-    if (this.unsubscribe) {
-        this.unsubscribe();
+    isErrorTemplateShown(form) {
+        return form.children.length === 1 && form.querySelector('.error-container');
+    },
+
+    destroy() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+        this.components = {
+            armsList: null,
+            categoriesRow: null,
+            scheduleBlock: null,
+            resultBlock: null,
+            submitButton: null
+        };
     }
-}
 };
-
-// Сохраняем ссылку на экземпляр для статических методов
-FormTask.instance = null;

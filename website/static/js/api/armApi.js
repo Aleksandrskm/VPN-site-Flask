@@ -1,4 +1,6 @@
-const armApi = {
+import { API_CONFIG, ENDPOINTS } from './config.js';
+
+export const armApi = {
     async getArms() {
         try {
             const response = await fetch(`${API_CONFIG.baseUrl}${ENDPOINTS.ARM}`, {

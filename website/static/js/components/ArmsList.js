@@ -1,11 +1,32 @@
-const ArmsList = {
+// js/components/ArmsList.js
+import { armApi } from '../api/armApi.js';
+import { TasksContext } from '../contexts/TasksContext.js';
+
+export const ArmsList = {
     element: null,
     arms: [],
     unsubscribe: null,
 
+    components: {
+        checkboxesDiv: null,
+        searchInput: null,
+        selectAllBtn: null,
+        clearAllBtn: null, // Добавляем кнопку "Снять все"
+        errorMsg: null
+    },
+
+    currentProps: {
+        selectedArms: [],
+        onArmsChange: null,
+        validationError: false
+    },
+
     async create(selectedArms, onArmsChange, validationError) {
         const section = document.createElement('section');
         section.className = `arms-list ${validationError ? 'error' : ''}`;
+
+        this.currentProps = { selectedArms, onArmsChange, validationError };
+        this.element = section;
 
         const header = document.createElement('div');
         header.className = 'arms-header';
@@ -13,19 +34,34 @@ const ArmsList = {
         const title = document.createElement('h3');
         title.textContent = 'Выберите АРМы для тестирования';
 
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'button-group';
+
         const selectAllBtn = document.createElement('button');
+        selectAllBtn.type = 'button';
         selectAllBtn.className = 'btn btn-secondary btn-sm';
         selectAllBtn.textContent = 'Выбрать все';
+        this.components.selectAllBtn = selectAllBtn;
+
+        const clearAllBtn = document.createElement('button');
+        clearAllBtn.type = 'button';
+        clearAllBtn.className = 'btn btn-secondary btn-sm';
+        clearAllBtn.textContent = 'Снять все';
+        this.components.clearAllBtn = clearAllBtn;
+
+        buttonGroup.appendChild(selectAllBtn);
+        buttonGroup.appendChild(clearAllBtn);
 
         header.appendChild(title);
-        header.appendChild(selectAllBtn);
+        header.appendChild(buttonGroup);
         section.appendChild(header);
 
+        // Сообщение об ошибке
         if (validationError) {
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'error-message';
-            errorMsg.textContent = 'Выберите хотя бы один АРМ';
-            section.appendChild(errorMsg);
+            this.components.errorMsg = document.createElement('div');
+            this.components.errorMsg.className = 'error-message';
+            this.components.errorMsg.textContent = 'Выберите хотя бы один АРМ';
+            section.appendChild(this.components.errorMsg);
         }
 
         const searchDiv = document.createElement('div');
@@ -35,35 +71,49 @@ const ArmsList = {
         searchInput.type = 'text';
         searchInput.className = 'form-control';
         searchInput.placeholder = 'Поиск АРМов...';
+        this.components.searchInput = searchInput;
         searchDiv.appendChild(searchInput);
         section.appendChild(searchDiv);
 
         const checkboxesDiv = document.createElement('div');
         checkboxesDiv.className = 'arms-checkboxes';
+        this.components.checkboxesDiv = checkboxesDiv;
         section.appendChild(checkboxesDiv);
-
-        this.element = section;
 
         // Загружаем список АРМов
         try {
+            console.log('Загрузка списка АРМов...');
             this.arms = await armApi.getArms();
-            this.renderArms(checkboxesDiv, this.arms, selectedArms, onArmsChange);
+            console.log('Загружено АРМов:', this.arms.length);
+            this.renderArms(this.arms, selectedArms, onArmsChange);
 
             // Обработчик поиска
             searchInput.addEventListener('input', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 const searchTerm = e.target.value.toLowerCase();
                 const filteredArms = this.arms.filter(arm =>
                     arm.name?.toLowerCase().includes(searchTerm) ||
                     arm.id?.toString().includes(searchTerm)
                 );
-                this.renderArms(checkboxesDiv, filteredArms, selectedArms, onArmsChange);
+                this.renderArms(filteredArms, this.currentProps.selectedArms, this.currentProps.onArmsChange);
             });
 
             // Обработчик "Выбрать все"
-            selectAllBtn.addEventListener('click', () => {
+            selectAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Выбрать все АРМы');
                 const allArmIds = this.arms.map(arm => arm.id);
-                onArmsChange(allArmIds);
-                this.renderArms(checkboxesDiv, this.arms, allArmIds, onArmsChange);
+                this.currentProps.onArmsChange(allArmIds);
+            });
+
+            // Обработчик "Снять все"
+            clearAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Снять все АРМы');
+                this.currentProps.onArmsChange([]);
             });
 
         } catch (error) {
@@ -71,25 +121,78 @@ const ArmsList = {
             checkboxesDiv.innerHTML = '<div class="error">Ошибка загрузки списка АРМов</div>';
         }
 
-        // Подписка на изменения
+        // Подписка на изменения контекста
         this.unsubscribe = TasksContext.subscribe((state) => {
-            if (state.selectedArms !== selectedArms) {
-                this.renderArms(checkboxesDiv, this.arms, state.selectedArms, onArmsChange);
+            // Обновляем только если изменились выбранные АРМы
+            if (JSON.stringify(state.selectedArms) !== JSON.stringify(this.currentProps.selectedArms)) {
+                console.log('Обновление выбранных АРМов:', state.selectedArms);
+                this.updateSelected(state.selectedArms);
+            }
+            // Обновляем ошибку валидации
+            if (state.validationErrors.arms !== this.currentProps.validationError) {
+                this.updateValidationError(state.validationErrors.arms);
             }
         });
 
         return section;
     },
 
-    renderArms(container, arms, selectedArms, onArmsChange) {
-        if (!arms || arms.length === 0) {
+    updateSelected(selectedArms) {
+        this.currentProps.selectedArms = selectedArms;
+
+        // Получаем текущий поисковый запрос
+        const searchTerm = this.components.searchInput?.value.toLowerCase() || '';
+
+        // Фильтруем arms по поиску
+        const filteredArms = this.arms.filter(arm =>
+            arm.name?.toLowerCase().includes(searchTerm) ||
+            arm.id?.toString().includes(searchTerm)
+        );
+
+        // Перерисовываем только список чекбоксов
+        this.renderArms(filteredArms, selectedArms, this.currentProps.onArmsChange);
+    },
+
+    updateValidationError(validationError) {
+        this.currentProps.validationError = validationError;
+
+        // Обновляем класс секции
+        if (this.element) {
+            this.element.className = `arms-list ${validationError ? 'error' : ''}`;
+        }
+
+        // Обновляем или создаем сообщение об ошибке
+        if (validationError) {
+            if (!this.components.errorMsg) {
+                this.components.errorMsg = document.createElement('div');
+                this.components.errorMsg.className = 'error-message';
+                this.components.errorMsg.textContent = 'Выберите хотя бы один АРМ';
+                // Вставляем после header
+                const header = this.element.querySelector('.arms-header');
+                if (header) {
+                    header.insertAdjacentElement('afterend', this.components.errorMsg);
+                }
+            }
+        } else {
+            if (this.components.errorMsg) {
+                this.components.errorMsg.remove();
+                this.components.errorMsg = null;
+            }
+        }
+    },
+
+    renderArms(armsToRender, selectedArms, onArmsChange) {
+        const container = this.components.checkboxesDiv;
+        if (!container) return;
+
+        if (!armsToRender || armsToRender.length === 0) {
             container.innerHTML = '<div class="empty">Нет доступных АРМов</div>';
             return;
         }
 
         container.innerHTML = '';
 
-        arms.forEach(arm => {
+        armsToRender.forEach(arm => {
             const div = document.createElement('div');
             div.className = 'arm-item';
 
@@ -102,6 +205,9 @@ const ArmsList = {
             checkbox.checked = selectedArms.includes(arm.id);
 
             checkbox.addEventListener('change', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log(`Чекбокс АРМ ${arm.id} изменен:`, e.target.checked);
                 const newSelected = e.target.checked
                     ? [...selectedArms, arm.id]
                     : selectedArms.filter(id => id !== arm.id);
@@ -119,9 +225,26 @@ const ArmsList = {
         });
     },
 
+    update(selectedArms, validationError) {
+        this.updateSelected(selectedArms);
+        this.updateValidationError(validationError);
+    },
+
     destroy() {
         if (this.unsubscribe) {
             this.unsubscribe();
         }
+        this.components = {
+            checkboxesDiv: null,
+            searchInput: null,
+            selectAllBtn: null,
+            clearAllBtn: null,
+            errorMsg: null
+        };
+        this.currentProps = {
+            selectedArms: [],
+            onArmsChange: null,
+            validationError: false
+        };
     }
 };

@@ -1,4 +1,7 @@
-const TableBtns = {
+import { TableBtn } from './TableBtn.js';
+import { ModalContext } from '../contexts/ModalContext.js';
+
+export const TableBtns = {
     create(tableInfo, tableData) {
         const article = document.createElement('article');
         article.className = 'table-btns';

@@ -1,4 +1,6 @@
-const Header = {
+import { Timer } from './Timer.js';
+
+export const Header = {
     create() {
         const header = document.createElement('header');
         header.className = 'header';

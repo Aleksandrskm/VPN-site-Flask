@@ -1,4 +1,8 @@
-const TableLists = {
+import { dbApi } from '../api/dbApi.js';
+import { transformStructureTables } from '../utils/transformStructureTables.js';
+import { TableList } from './TableList.js';
+
+export const TableLists = {
     element: null,
     unsubscribe: null,
 

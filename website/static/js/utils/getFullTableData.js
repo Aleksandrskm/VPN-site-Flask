@@ -1,4 +1,6 @@
-const getFullTableData = async (tableName) => {
+import { dbApi } from '../api/dbApi.js';
+
+export const getFullTableData = async (tableName) => {
     try {
         const [tableInfo, tableData] = await Promise.all([
             dbApi.tableInfo(tableName),

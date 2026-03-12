@@ -1,4 +1,4 @@
-const TableBtn = {
+export const TableBtn = {
     create({ title, onClick, type = 'button', disabled = false }) {
         const button = document.createElement('button');
         button.className = 'btn btn-primary';

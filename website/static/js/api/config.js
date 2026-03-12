@@ -1,12 +1,11 @@
-const API_CONFIG = {
+export const API_CONFIG = {
     baseUrl: 'http://185.192.247.60:13500',
     headers: {
         'Content-Type': 'application/json',
     }
 };
 
-// Эндпоинты
-const ENDPOINTS = {
+export const ENDPOINTS = {
     ARM: '/workstations',
     DB: {
         EDIT_ROW: (tableName) => `/db/update/${tableName}`,

@@ -1,35 +1,38 @@
-const TableContext = {
-    state: {
-        selectedTableName: null,
-        selectedTableNameRu: null,
-        tableData: null,
-        tableInfo: null
-    },
+import { getFullTableData } from '../utils/getFullTableData.js';
 
-    listeners: [],
+class TableContextClass {
+    constructor() {
+        this.state = {
+            selectedTableName: null,
+            selectedTableNameRu: null,
+            tableData: null,
+            tableInfo: null
+        };
+        this.listeners = [];
+    }
 
     subscribe(listener) {
         this.listeners.push(listener);
         return () => {
             this.listeners = this.listeners.filter(l => l !== listener);
         };
-    },
+    }
 
     notify() {
         this.listeners.forEach(listener => listener(this.state));
-    },
+    }
 
     setState(newState) {
         this.state = { ...this.state, ...newState };
         this.notify();
-    },
+    }
 
     async selectTestsTable(tableName, tableNameRu) {
         this.setState({
             selectedTableName: tableName,
             selectedTableNameRu: tableNameRu
         });
-    },
+    }
 
     async selectTable(tableName, tableNameRu) {
         try {
@@ -49,7 +52,7 @@ const TableContext = {
                 tableData: null
             });
         }
-    },
+    }
 
     async refreshCurrentTable(tableName = null) {
         const targetTableName = tableName || this.state.selectedTableName;
@@ -76,9 +79,11 @@ const TableContext = {
             console.error(`Error refreshing table ${targetTableName}:`, error);
             return null;
         }
-    },
+    }
 
     getState() {
         return this.state;
     }
-};
+}
+
+export const TableContext = new TableContextClass();

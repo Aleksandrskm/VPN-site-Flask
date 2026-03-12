@@ -1,4 +1,8 @@
-const TableView = {
+import { TableContext } from '../contexts/TableContext.js';
+import { Table } from './Table.js';
+import { TableBtns } from './TableBtns.js';
+
+export const TableView = {
     element: null,
     unsubscribe: null,
 

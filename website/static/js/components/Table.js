@@ -1,4 +1,9 @@
-const Table = {
+import { TableHead } from './TableHead.js';
+import { TableBody } from './TableBody.js';
+import { ModalContext } from '../contexts/ModalContext.js';
+import { TableContext } from '../contexts/TableContext.js';
+
+export const Table = {
     create(tableInfo, tableData) {
         const container = document.createElement('div');
         container.className = 'table-container';
