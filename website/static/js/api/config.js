@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-    baseUrl: 'http://127.0.0.1:8000',
+    baseUrl: 'http://185.192.247.60:13500',
     headers: {
         'Content-Type': 'application/json',
     }
