@@ -7,7 +7,6 @@ export const FormTask = {
     element: null,
     unsubscribe: null,
 
-    // Сохраняем ссылки на динамические элементы
     components: {
         armsList: null,
         categoriesRow: null,
@@ -42,18 +41,22 @@ export const FormTask = {
 
         // Подписываемся на изменения контекста
         this.unsubscribe = TasksContext.subscribe((state) => {
-            this.updateSmart(state); // Используем умное обновление
+            if (this.element && this.element.isConnected) {
+                this.updateSmart(state);
+            }
         });
 
         // Первоначальный рендер
         this.renderInitial(TasksContext.getState());
 
+        // Добавляем метод destroy для очистки
+        section.destroy = () => this.destroy();
+
         return section;
     },
 
-    // Первоначальный рендер всей формы
     async renderInitial(state) {
-        const form = this.element.querySelector('.form-task');
+        const form = this.element?.querySelector('.form-task');
         if (!form) return;
 
         if (state.isConfigLoading) {
@@ -69,10 +72,14 @@ export const FormTask = {
 
         form.innerHTML = '';
 
-        // ВАЖНО: Ждем создания ArmsList
+        // Создаем ArmsList с правильным await
         const armsList = await ArmsList.create(
             state.selectedArms,
-            (selected) => TasksContext.handleArmsChange(selected),
+            (selected) => {
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleArmsChange(selected);
+                }
+            },
             state.validationErrors.arms
         );
         this.components.armsList = armsList;
@@ -84,16 +91,40 @@ export const FormTask = {
         this.components.scheduleBlock = ScheduleBlock.create({
             startDate: state.startDate,
             startTime: state.startTime,
-            onDateChange: (date) => TasksContext.handleDateChange(date),
-            onTimeChange: (time) => TasksContext.handleTimeChange(time),
+            onDateChange: (date) => {
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleDateChange(date);
+                }
+            },
+            onTimeChange: (time) => {
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleTimeChange(time);
+                }
+            },
             scheduleType: state.scheduleType,
-            onScheduleTypeChange: (type) => TasksContext.handleScheduleTypeChange(type),
+            onScheduleTypeChange: (type) => {
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleScheduleTypeChange(type);
+                }
+            },
             interval: state.interval,
-            onIntervalChange: (field, value) => TasksContext.handleIntervalChange(field, value),
+            onIntervalChange: (field, value) => {
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleIntervalChange(field, value);
+                }
+            },
             startDateTime: state.startDateTime,
-            onStartDateTimeChange: (field, value) => TasksContext.handleStartDateTimeChange(field, value),
+            onStartDateTimeChange: (field, value) => {
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleStartDateTimeChange(field, value);
+                }
+            },
             endDateTime: state.endDateTime,
-            onEndDateTimeChange: (field, value) => TasksContext.handleEndDateTimeChange(field, value)
+            onEndDateTimeChange: (field, value) => {
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleEndDateTimeChange(field, value);
+                }
+            }
         });
         form.appendChild(this.components.scheduleBlock);
 
@@ -106,12 +137,10 @@ export const FormTask = {
         form.appendChild(this.components.submitButton);
     },
 
-    // Умное обновление только изменяющихся частей
     updateSmart(state) {
         const form = this.element?.querySelector('.form-task');
-        if (!form) return;
+        if (!form || !this.element.isConnected) return;
 
-        // Проверяем состояние загрузки
         if (state.isConfigLoading) {
             if (!this.isLoadingTemplateShown(form)) {
                 form.innerHTML = this.getLoadingTemplate();
@@ -119,7 +148,6 @@ export const FormTask = {
             return;
         }
 
-        // Проверяем ошибки
         if (state.apiError && !state.taskConfig.vpns?.length) {
             if (!this.isErrorTemplateShown(form)) {
                 form.innerHTML = this.getErrorTemplate(state);
@@ -128,13 +156,11 @@ export const FormTask = {
             return;
         }
 
-        // Если форма пустая или это первый рендер после загрузки
         if (form.children.length === 0) {
             this.renderInitial(state);
             return;
         }
 
-        // Инкрементальное обновление каждого компонента
         this.updateArmsList(state);
         this.updateCategories(state);
         this.updateScheduleBlock(state);
@@ -143,25 +169,33 @@ export const FormTask = {
     },
 
     async updateArmsList(state) {
-        if (this.components.armsList) {
-            // Используем метод update если он есть
+        if (this.components.armsList && this.components.armsList.isConnected) {
             if (this.components.armsList.update) {
                 this.components.armsList.update(state.selectedArms, state.validationErrors.arms);
             } else {
-                // Иначе создаем новый
                 const newArmsList = await ArmsList.create(
                     state.selectedArms,
-                    (selected) => TasksContext.handleArmsChange(selected),
+                    (selected) => {
+                        if (this.element && this.element.isConnected) {
+                            TasksContext.handleArmsChange(selected);
+                        }
+                    },
                     state.validationErrors.arms
                 );
                 this.components.armsList.replaceWith(newArmsList);
+
+                // Уничтожаем старый список
+                if (this.components.armsList.destroy) {
+                    this.components.armsList.destroy();
+                }
+
                 this.components.armsList = newArmsList;
             }
         }
     },
 
     updateCategories(state) {
-        if (this.components.categoriesRow) {
+        if (this.components.categoriesRow && this.components.categoriesRow.isConnected) {
             const newCategoriesRow = this.createCategoriesRow(state);
             this.components.categoriesRow.replaceWith(newCategoriesRow);
             this.components.categoriesRow = newCategoriesRow;
@@ -169,20 +203,44 @@ export const FormTask = {
     },
 
     updateScheduleBlock(state) {
-        if (this.components.scheduleBlock) {
+        if (this.components.scheduleBlock && this.components.scheduleBlock.isConnected) {
             const newScheduleBlock = ScheduleBlock.create({
                 startDate: state.startDate,
                 startTime: state.startTime,
-                onDateChange: (date) => TasksContext.handleDateChange(date),
-                onTimeChange: (time) => TasksContext.handleTimeChange(time),
+                onDateChange: (date) => {
+                    if (this.element && this.element.isConnected) {
+                        TasksContext.handleDateChange(date);
+                    }
+                },
+                onTimeChange: (time) => {
+                    if (this.element && this.element.isConnected) {
+                        TasksContext.handleTimeChange(time);
+                    }
+                },
                 scheduleType: state.scheduleType,
-                onScheduleTypeChange: (type) => TasksContext.handleScheduleTypeChange(type),
+                onScheduleTypeChange: (type) => {
+                    if (this.element && this.element.isConnected) {
+                        TasksContext.handleScheduleTypeChange(type);
+                    }
+                },
                 interval: state.interval,
-                onIntervalChange: (field, value) => TasksContext.handleIntervalChange(field, value),
+                onIntervalChange: (field, value) => {
+                    if (this.element && this.element.isConnected) {
+                        TasksContext.handleIntervalChange(field, value);
+                    }
+                },
                 startDateTime: state.startDateTime,
-                onStartDateTimeChange: (field, value) => TasksContext.handleStartDateTimeChange(field, value),
+                onStartDateTimeChange: (field, value) => {
+                    if (this.element && this.element.isConnected) {
+                        TasksContext.handleStartDateTimeChange(field, value);
+                    }
+                },
                 endDateTime: state.endDateTime,
-                onEndDateTimeChange: (field, value) => TasksContext.handleEndDateTimeChange(field, value)
+                onEndDateTimeChange: (field, value) => {
+                    if (this.element && this.element.isConnected) {
+                        TasksContext.handleEndDateTimeChange(field, value);
+                    }
+                }
             });
             this.components.scheduleBlock.replaceWith(newScheduleBlock);
             this.components.scheduleBlock = newScheduleBlock;
@@ -190,19 +248,16 @@ export const FormTask = {
     },
 
     updateResult(state) {
-        const form = this.element.querySelector('.form-task');
-        if (!form) return;
+        const form = this.element?.querySelector('.form-task');
+        if (!form || !this.element.isConnected) return;
 
         if (state.tasksResult) {
-            if (this.components.resultBlock) {
-                // Обновляем существующий блок результата
+            if (this.components.resultBlock && this.components.resultBlock.isConnected) {
                 const newResultBlock = this.createResultBlock(state.tasksResult);
                 this.components.resultBlock.replaceWith(newResultBlock);
                 this.components.resultBlock = newResultBlock;
             } else {
-                // Создаем новый блок результата
                 this.components.resultBlock = this.createResultBlock(state.tasksResult);
-                // Вставляем перед кнопкой submit
                 if (this.components.submitButton) {
                     form.insertBefore(this.components.resultBlock, this.components.submitButton);
                 } else {
@@ -210,8 +265,7 @@ export const FormTask = {
                 }
             }
         } else {
-            // Удаляем блок результата если его нет в стейте
-            if (this.components.resultBlock) {
+            if (this.components.resultBlock && this.components.resultBlock.isConnected) {
                 this.components.resultBlock.remove();
                 this.components.resultBlock = null;
             }
@@ -219,7 +273,7 @@ export const FormTask = {
     },
 
     updateSubmitButton(state) {
-        if (this.components.submitButton) {
+        if (this.components.submitButton && this.components.submitButton.isConnected) {
             this.components.submitButton.disabled = state.isLoading || state.isConfigLoading;
             this.components.submitButton.textContent = state.isLoading ? 'Отправка...' : 'Поставить задачу';
         }
@@ -262,7 +316,9 @@ export const FormTask = {
             selectAllBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                TasksContext.handleSelectAll(category, items);
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleSelectAll(category, items);
+                }
             });
 
             const clearAllBtn = document.createElement('button');
@@ -272,7 +328,9 @@ export const FormTask = {
             clearAllBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                TasksContext.handleClearAll(category);
+                if (this.element && this.element.isConnected) {
+                    TasksContext.handleClearAll(category);
+                }
             });
 
             const countSpan = document.createElement('span');
@@ -308,7 +366,9 @@ export const FormTask = {
                 checkbox.addEventListener('change', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    TasksContext.handleCheckboxChange(category, item, e.target.checked);
+                    if (this.element && this.element.isConnected) {
+                        TasksContext.handleCheckboxChange(category, item, e.target.checked);
+                    }
                 });
 
                 const span = document.createElement('span');
@@ -347,7 +407,9 @@ export const FormTask = {
         button.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            await TasksContext.submitForm();
+            if (this.element && this.element.isConnected) {
+                await TasksContext.submitForm();
+            }
         });
 
         return button;
@@ -392,9 +454,22 @@ export const FormTask = {
     },
 
     destroy() {
+        console.log('Destroying FormTask');
+
+        // Отписываемся от контекста
         if (this.unsubscribe) {
             this.unsubscribe();
+            this.unsubscribe = null;
         }
+
+        // Уничтожаем все дочерние компоненты
+        Object.values(this.components).forEach(component => {
+            if (component && component.destroy) {
+                component.destroy();
+            }
+        });
+
+        // Очищаем ссылки
         this.components = {
             armsList: null,
             categoriesRow: null,
@@ -402,5 +477,7 @@ export const FormTask = {
             resultBlock: null,
             submitButton: null
         };
+
+        this.element = null;
     }
 };

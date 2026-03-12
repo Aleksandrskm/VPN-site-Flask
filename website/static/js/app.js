@@ -1,12 +1,11 @@
 // Главный файл приложения
-// Добавьте это в самое начало app.js, перед всеми импортами
 // Глобальный перехват отправки форм
 document.addEventListener('submit', (e) => {
     e.preventDefault();
     e.stopPropagation();
     console.log('🛑 Global form submit prevented');
     return false;
-}, true); // Используем capturing phase для перехвата до других обработчиков
+}, true);
 
 // Глобальный перехват кликов по кнопкам submit
 document.addEventListener('click', (e) => {
@@ -28,6 +27,7 @@ document.addEventListener('keydown', (e) => {
         return false;
     }
 }, true);
+
 import { Header } from './components/Header.js';
 import { Modal } from './components/Modal.js';
 import { ResultTestsTable } from './components/ResultTestsTable.js';
@@ -37,6 +37,7 @@ import { TableView } from './components/TableView.js';
 
 const App = {
     currentPage: 'results',
+    currentContent: null, // Ссылка на текущий контент для очистки
 
     async init() {
         try {
@@ -82,6 +83,24 @@ const App = {
         });
     },
 
+    // Метод для очистки текущего контента
+    destroyCurrentContent() {
+        if (this.currentContent) {
+            // Если у контента есть метод destroy, вызываем его
+            if (this.currentContent.destroy) {
+                console.log('Destroying current content:', this.currentContent.constructor?.name);
+                this.currentContent.destroy();
+            }
+
+            // Очищаем все подписки в компонентах
+            if (this.currentContent.unsubscribe) {
+                this.currentContent.unsubscribe();
+            }
+
+            this.currentContent = null;
+        }
+    },
+
     async loadPage(page) {
         this.currentPage = page;
 
@@ -89,6 +108,9 @@ const App = {
         container.innerHTML = '<div class="loading">Загрузка...</div>';
 
         try {
+            // Уничтожаем предыдущий контент
+            this.destroyCurrentContent();
+
             let content;
 
             switch(page) {
@@ -108,6 +130,9 @@ const App = {
                     content = document.createElement('div');
                     content.textContent = 'Страница не найдена';
             }
+
+            // Сохраняем ссылку на текущий контент
+            this.currentContent = content;
 
             container.innerHTML = '';
             container.appendChild(content);
@@ -130,7 +155,6 @@ const App = {
         const container = document.createElement('div');
         container.className = 'data-editor';
 
-        // Создаем две колонки
         const leftColumn = document.createElement('div');
         leftColumn.className = 'left-column';
 
@@ -138,16 +162,21 @@ const App = {
         rightColumn.className = 'right-column';
 
         try {
-            // Добавляем список таблиц слева
             const tableLists = await TableLists.create();
             leftColumn.appendChild(tableLists);
 
-            // Добавляем просмотр таблицы справа
             const tableView = TableView.create();
             rightColumn.appendChild(tableView);
 
             container.appendChild(leftColumn);
             container.appendChild(rightColumn);
+
+            // Сохраняем ссылки для очистки
+            container.destroy = () => {
+                if (tableLists.destroy) tableLists.destroy();
+                if (tableView.destroy) tableView.destroy();
+            };
+
         } catch (error) {
             console.error('Error creating data editor:', error);
             container.innerHTML = `
@@ -167,5 +196,4 @@ document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });
 
-// Для отладки - делаем App доступным глобально
 window.App = App;
