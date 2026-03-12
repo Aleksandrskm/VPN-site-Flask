@@ -31,9 +31,11 @@ document.addEventListener('keydown', (e) => {
 import { Header } from './components/Header.js';
 import { Modal } from './components/Modal.js';
 import { ResultTestsTable } from './components/ResultTestsTable.js';
+import { ViewPlanTasks } from './components/ViewPlanTasks.js';
 import { FormTask } from './components/FormTask.js';
 import { TableLists } from './components/TableLists.js';
 import { TableView } from './components/TableView.js';
+
 
 const App = {
     currentPage: 'results',
@@ -116,6 +118,9 @@ const App = {
             switch(page) {
                 case 'results':
                     content = await ResultTestsTable.create();
+                    break;
+                case 'plan':
+                    content = await ViewPlanTasks.create();
                     break;
 
                 case 'task-manager':

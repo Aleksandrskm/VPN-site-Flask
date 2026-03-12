@@ -1,5 +1,4 @@
-// js/components/ResultTestsTable.js
-export const ResultTestsTable = {
+export const ViewPlanTasks = {
     element: null,
     unsubscribe: null,
 
@@ -10,9 +9,9 @@ export const ResultTestsTable = {
         // Создаем пустую страницу с заглушкой
         section.innerHTML = `
             <div class="empty-results">
-                <div class="empty-icon">📊</div>
-                <h2>Просмотр результатов</h2>
-                <p>Здесь будут отображаться результаты задач</p>
+                <div class="empty-icon"></div>
+                <h2>Просмотр планируемых задач</h2>
+                <p>Здесь будут отображаться планируемые задачи</p>
                 <p class="coming-soon">В разработке</p>
             </div>
         `;
