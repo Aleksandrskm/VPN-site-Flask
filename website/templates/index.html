@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система тестирования доступности</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modules.css') }}">
+</head>
+<body>
+<div id="app">
+    <!-- Header будет вставлен сюда -->
+    <header id="header"></header>
+
+    <main id="main-content">
+        <!-- Навигация -->
+        <nav class="main-nav">
+            <a href="/" data-page="results">Результаты тестов</a>
+            <a href="/task-manager" data-page="task-manager">Управление задачами</a>
+            <a href="/data-editor" data-page="data-editor">Редактор данных</a>
+        </nav>
+
+        <!-- Контейнер для страниц -->
+        <div id="page-container"></div>
+    </main>
+</div>
+
+<!-- API скрипты -->
+<script defer src="{{ url_for('static', filename='js/api/config.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/api/dbApi.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/api/armApi.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/api/taskApi.js') }}"></script>
+
+<!-- Утилиты -->
+<script src="{{ url_for('static', filename='js/utils/dateUtils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/getFullTableData.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils/transformStructureTables.js') }}"></script>
+
+<!-- Контексты -->
+<script src="{{ url_for('static', filename='js/contexts/TableContext.js') }}"></script>
+<script src="{{ url_for('static', filename='js/contexts/TasksContext.js') }}"></script>
+<script src="{{ url_for('static', filename='js/contexts/ModalContext.js') }}"></script>
+
+<!-- Компоненты -->
+<script src="{{ url_for('static', filename='js/components/Timer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/Header.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableHead.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableRow.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableBody.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/Table.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableBtn.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableBtns.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableList.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableLists.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/TableView.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/Modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/ArmsList.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/ScheduleBlock.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/FormTask.js') }}"></script>
+<script src="{{ url_for('static', filename='js/components/ResultTestsTable.js') }}"></script>
+
+<!-- Главный скрипт -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+<!-- Добавим небольшой скрипт для проверки загрузки -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('HTML загружен, пути к статическим файлам:');
+        console.log('CSS main:', '{{ url_for('static', filename='css/main.css') }}');
+        console.log('JS app:', '{{ url_for('static', filename='js/app.js') }}');
+    });
+</script>
+</body>
+</html>
