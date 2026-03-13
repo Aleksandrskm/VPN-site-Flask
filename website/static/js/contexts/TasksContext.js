@@ -1,3 +1,4 @@
+// js/contexts/TasksContext.js
 import { taskApi } from '../api/taskApi.js';
 import { armApi } from '../api/armApi.js';
 import { DateUtils } from '../utils/dateUtils.js';
@@ -15,7 +16,7 @@ class TasksContextClass {
             },
             endDateTime: {
                 date: DateUtils.getDateForInput(DateUtils.addDays(new Date(), 5)),
-                time: DateUtils.getTimeForInput()
+                time: '00:00:00'
             },
             taskConfig: {
                 vpns: [],
@@ -40,6 +41,8 @@ class TasksContextClass {
             apiError: null
         };
         this.listeners = [];
+        this.updateTimeout = null;
+        this.pendingUpdates = null;
         this.loadConfig();
     }
 
@@ -54,9 +57,68 @@ class TasksContextClass {
         this.listeners.forEach(listener => listener(this.state));
     }
 
+    // Метод для отложенного обновления с группировкой
+    scheduleUpdate(newState) {
+        // Если уже есть запланированное обновление, объединяем изменения
+        if (this.pendingUpdates) {
+            this.pendingUpdates = { ...this.pendingUpdates, ...newState };
+        } else {
+            this.pendingUpdates = newState;
+        }
+
+        // Отменяем предыдущий таймаут
+        if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
+        }
+
+        // Устанавливаем новый таймаут
+        this.updateTimeout = setTimeout(() => {
+            if (this.pendingUpdates) {
+                // Проверяем, изменилось ли что-то действительно
+                const hasChanges = Object.keys(this.pendingUpdates).some(key => {
+                    if (key === 'interval' || key === 'startDateTime' || key === 'endDateTime') {
+                        return JSON.stringify(this.pendingUpdates[key]) !== JSON.stringify(this.state[key]);
+                    }
+                    return this.pendingUpdates[key] !== this.state[key];
+                });
+
+                if (hasChanges) {
+                    this.state = { ...this.state, ...this.pendingUpdates };
+                    this.notify();
+                }
+
+                this.pendingUpdates = null;
+            }
+            this.updateTimeout = null;
+        }, 5); // Небольшая задержка для группировки быстрых изменений
+    }
+
+    // Мгновенное обновление (для важных изменений)
     setState(newState) {
-        this.state = { ...this.state, ...newState };
-        this.notify();
+        // Если есть запланированные обновления, применяем их сразу
+        if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
+            this.updateTimeout = null;
+
+            if (this.pendingUpdates) {
+                // Объединяем запланированные изменения с новыми
+                newState = { ...this.pendingUpdates, ...newState };
+                this.pendingUpdates = null;
+            }
+        }
+
+        // Проверяем, изменилось ли что-то действительно
+        const hasChanges = Object.keys(newState).some(key => {
+            if (key === 'interval' || key === 'startDateTime' || key === 'endDateTime') {
+                return JSON.stringify(newState[key]) !== JSON.stringify(this.state[key]);
+            }
+            return newState[key] !== this.state[key];
+        });
+
+        if (hasChanges) {
+            this.state = { ...this.state, ...newState };
+            this.notify();
+        }
     }
 
     async loadConfig() {
@@ -94,7 +156,7 @@ class TasksContextClass {
 
         newSelectedItems[category] = newCategory;
 
-        this.setState({
+        this.scheduleUpdate({
             selectedItems: newSelectedItems,
             validationErrors: {
                 ...this.state.validationErrors,
@@ -104,15 +166,15 @@ class TasksContextClass {
     }
 
     handleDateChange(date) {
-        this.setState({ startDate: date });
+        this.scheduleUpdate({ startDate: date });
     }
 
     handleTimeChange(time) {
-        this.setState({ startTime: time });
+        this.scheduleUpdate({ startTime: time });
     }
 
     handleSelectAll(category, items) {
-        this.setState({
+        this.scheduleUpdate({
             selectedItems: {
                 ...this.state.selectedItems,
                 [category]: [...items]
@@ -125,7 +187,7 @@ class TasksContextClass {
     }
 
     handleClearAll(category) {
-        this.setState({
+        this.scheduleUpdate({
             selectedItems: {
                 ...this.state.selectedItems,
                 [category]: []
@@ -142,7 +204,7 @@ class TasksContextClass {
     }
 
     handleArmsChange(selected) {
-        this.setState({
+        this.scheduleUpdate({
             selectedArms: selected,
             validationErrors: {
                 ...this.state.validationErrors,
@@ -152,20 +214,21 @@ class TasksContextClass {
     }
 
     handleScheduleTypeChange(type) {
+        // Используем setState для немедленного обновления
         this.setState({ scheduleType: type });
     }
 
     handleIntervalChange(field, value) {
-        this.setState({
+        this.scheduleUpdate({
             interval: {
                 ...this.state.interval,
-                [field]: value
+                [field]: field === 'value' ? parseInt(value) : value
             }
         });
     }
 
     handleStartDateTimeChange(field, value) {
-        this.setState({
+        this.scheduleUpdate({
             startDateTime: {
                 ...this.state.startDateTime,
                 [field]: value
@@ -174,7 +237,7 @@ class TasksContextClass {
     }
 
     handleEndDateTimeChange(field, value) {
-        this.setState({
+        this.scheduleUpdate({
             endDateTime: {
                 ...this.state.endDateTime,
                 [field]: value
@@ -261,7 +324,7 @@ class TasksContextClass {
                 this.setState({
                     tasksResult: {
                         success: false,
-                        error: ` Слишком много задач для одного АРМ: ${tasksPerArm}. Максимум: ${MAX_TASKS_PER_ARM}. Увеличьте интервал или уменьшите период.`
+                        error: `Слишком много задач для одного АРМ: ${tasksPerArm}. Максимум: ${MAX_TASKS_PER_ARM}. Увеличьте интервал или уменьшите период.`
                     },
                     isLoading: false
                 });
@@ -272,7 +335,7 @@ class TasksContextClass {
                 this.setState({
                     tasksResult: {
                         success: false,
-                        error: ` Слишком много задач всего: ${totalTasks}. Максимум: ${MAX_TOTAL_TASKS}. Уменьшите количество АРМ или период.`
+                        error: `Слишком много задач всего: ${totalTasks}. Максимум: ${MAX_TOTAL_TASKS}. Уменьшите количество АРМ или период.`
                     },
                     isLoading: false
                 });
@@ -343,21 +406,21 @@ class TasksContextClass {
                 this.setState({
                     tasksResult: {
                         success: true,
-                        message: ` Задачи успешно созданы: ${successCount} из ${totalTasksCreated} (для ${this.state.selectedArms.length} АРМ, по ${tasksPerArm} задач на АРМ). Время: ${DateUtils.getDateTime()}`
+                        message: `Задачи успешно созданы: ${successCount} из ${totalTasksCreated} (для ${this.state.selectedArms.length} АРМ, по ${tasksPerArm} задач на АРМ). Время: ${DateUtils.getDateTime()}`
                     }
                 });
             } else if (successCount === 0) {
                 this.setState({
                     tasksResult: {
                         success: false,
-                        error: ` Не удалось создать задачи: ${failCount} из ${totalTasksCreated}`
+                        error: `Не удалось создать задачи: ${failCount} из ${totalTasksCreated}`
                     }
                 });
             } else {
                 this.setState({
                     tasksResult: {
                         success: true,
-                        message: ` Задачи созданы частично: ${successCount} успешно, ${failCount} ошибок из ${totalTasksCreated}. Время: ${DateUtils.getDateTime()}`
+                        message: `Задачи созданы частично: ${successCount} успешно, ${failCount} ошибок из ${totalTasksCreated}. Время: ${DateUtils.getDateTime()}`
                     }
                 });
             }
@@ -406,7 +469,7 @@ class TasksContextClass {
             },
             endDateTime: {
                 date: DateUtils.getDateForInput(fiveDaysLater),
-                time: DateUtils.getTimeForInput()
+                time: '00:00:00'
             }
         });
     }

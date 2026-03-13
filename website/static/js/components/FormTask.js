@@ -88,44 +88,8 @@ export const FormTask = {
         this.components.categoriesRow = this.createCategoriesRow(state);
         form.appendChild(this.components.categoriesRow);
 
-        this.components.scheduleBlock = ScheduleBlock.create({
-            startDate: state.startDate,
-            startTime: state.startTime,
-            onDateChange: (date) => {
-                if (this.element && this.element.isConnected) {
-                    TasksContext.handleDateChange(date);
-                }
-            },
-            onTimeChange: (time) => {
-                if (this.element && this.element.isConnected) {
-                    TasksContext.handleTimeChange(time);
-                }
-            },
-            scheduleType: state.scheduleType,
-            onScheduleTypeChange: (type) => {
-                if (this.element && this.element.isConnected) {
-                    TasksContext.handleScheduleTypeChange(type);
-                }
-            },
-            interval: state.interval,
-            onIntervalChange: (field, value) => {
-                if (this.element && this.element.isConnected) {
-                    TasksContext.handleIntervalChange(field, value);
-                }
-            },
-            startDateTime: state.startDateTime,
-            onStartDateTimeChange: (field, value) => {
-                if (this.element && this.element.isConnected) {
-                    TasksContext.handleStartDateTimeChange(field, value);
-                }
-            },
-            endDateTime: state.endDateTime,
-            onEndDateTimeChange: (field, value) => {
-                if (this.element && this.element.isConnected) {
-                    TasksContext.handleEndDateTimeChange(field, value);
-                }
-            }
-        });
+        // Просто создаем ScheduleBlock без пропсов
+        this.components.scheduleBlock = ScheduleBlock.create();
         form.appendChild(this.components.scheduleBlock);
 
         if (state.tasksResult) {
@@ -202,50 +166,12 @@ export const FormTask = {
         }
     },
 
+
     updateScheduleBlock(state) {
-        if (this.components.scheduleBlock && this.components.scheduleBlock.isConnected) {
-            const newScheduleBlock = ScheduleBlock.create({
-                startDate: state.startDate,
-                startTime: state.startTime,
-                onDateChange: (date) => {
-                    if (this.element && this.element.isConnected) {
-                        TasksContext.handleDateChange(date);
-                    }
-                },
-                onTimeChange: (time) => {
-                    if (this.element && this.element.isConnected) {
-                        TasksContext.handleTimeChange(time);
-                    }
-                },
-                scheduleType: state.scheduleType,
-                onScheduleTypeChange: (type) => {
-                    if (this.element && this.element.isConnected) {
-                        TasksContext.handleScheduleTypeChange(type);
-                    }
-                },
-                interval: state.interval,
-                onIntervalChange: (field, value) => {
-                    if (this.element && this.element.isConnected) {
-                        TasksContext.handleIntervalChange(field, value);
-                    }
-                },
-                startDateTime: state.startDateTime,
-                onStartDateTimeChange: (field, value) => {
-                    if (this.element && this.element.isConnected) {
-                        TasksContext.handleStartDateTimeChange(field, value);
-                    }
-                },
-                endDateTime: state.endDateTime,
-                onEndDateTimeChange: (field, value) => {
-                    if (this.element && this.element.isConnected) {
-                        TasksContext.handleEndDateTimeChange(field, value);
-                    }
-                }
-            });
-            this.components.scheduleBlock.replaceWith(newScheduleBlock);
-            this.components.scheduleBlock = newScheduleBlock;
-        }
-    },
+        // Ничего не делаем, ScheduleBlock сам обновляется через подписку
+        return;
+    }
+    ,
 
     updateResult(state) {
         const form = this.element?.querySelector('.form-task');

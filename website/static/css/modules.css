@@ -984,8 +984,9 @@
 }
 
 .search-box {
-    display: flex;
+    display: none;
     gap: 5px;
+
 }
 
 .search-input {
@@ -995,6 +996,7 @@
     font-size: 14px;
     min-width: 250px;
     transition: border-color 0.2s, box-shadow 0.2s;
+    display: none;
 }
 
 .search-input:focus {
@@ -1236,6 +1238,7 @@
     .search-input {
         min-width: auto;
         width: 100%;
+        display: none;
     }
 
     .tasks-table-container {

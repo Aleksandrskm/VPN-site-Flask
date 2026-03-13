@@ -124,16 +124,16 @@ export const ViewPlanTasks = {
 
             if (response && response.tasks) {
                 this.state.tasks = response.tasks.map(task => ({
-                    id: task.ID,
-                    workstation_name: `АРМ-${task.ID_PR_ARM}`,
-                    started_at: task.ZAD_BEG,
-                    status: this.mapStatus(task.STATUS),
-                    config: task.CONFIG ? JSON.parse(task.CONFIG) : null,
-                    kol_vpn: task.KOL_VPN || 0,
-                    kol_site: task.KOL_SITE || 0,
-                    kol_prg: task.KOL_PRG || 0,
-                    http: task.HTTP || '-',
-                    comment: task.COMMENT || '-'
+                    id: task.id,
+                    workstation_name: task.workstation_ip ? `АРМ-${task.workstation_ip}` : (task.workstation_id ? `АРМ-${task.workstation_id}` : '-'),
+                    started_at: task.started_at,
+                    status: this.mapStatus(task.status),
+                    config: task.config ? JSON.parse(task.config) : null,
+                    kol_vpn: task.vpn_total || 0,
+                    kol_site: task.sites_total || 0,
+                    kol_prg: task.programs_total || 0,
+                    http: task.comment || '-',
+                    comment: task.comment || '-'
                 }));
 
                 this.state.totalTasks = response.total || 0;

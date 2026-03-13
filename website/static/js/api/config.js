@@ -19,6 +19,8 @@ export const ENDPOINTS = {
     },
     TASK: {
         DEFAULT_CONFIG: '/tasks/default_config',
-        ADD_TASK: '/tasks'
+        ADD_TASK: '/tasks',
+        GET_TASKS: (page, pageSize) => `/tasks?page=${page}&page_size=${pageSize}`,
+        GET_TASK_DETAIL: (taskId) => `/tasks/${taskId}/detail`,
     }
 };

@@ -1,86 +1,58 @@
+// js/components/ScheduleBlock.js
 import { DateUtils } from '../utils/dateUtils.js';
+import { TasksContext } from '../contexts/TasksContext.js';
 
 export const ScheduleBlock = {
-    create({
-               startDate,
-               startTime,
-               onDateChange,
-               onTimeChange,
-               scheduleType = 'once',
-               onScheduleTypeChange,
-               interval,
-               onIntervalChange,
-               startDateTime,
-               onStartDateTimeChange,
-               endDateTime,
-               onEndDateTimeChange
-           }) {
+    element: null,
+    unsubscribe: null,
+
+    create() {
         const div = document.createElement('div');
         div.className = 'schedule-block';
+        this.element = div;
 
-        div.innerHTML = `
-            <h3 class="schedule-title">Расписание тестирования</h3>
-            
-            <div class="schedule-type">
-                <label class="radio-label">
-                    <input type="radio" name="scheduleType" value="once" ${scheduleType === 'once' ? 'checked' : ''}>
-                    <span>Задача отдельная</span>
-                </label>
-                <label class="radio-label">
-                    <input type="radio" name="scheduleType" value="periodic" ${scheduleType === 'periodic' ? 'checked' : ''}>
-                    <span>Задача периодическая</span>
-                </label>
-            </div>
-            
-            <div id="schedule-content"></div>
-        `;
-
-        const contentDiv = div.querySelector('#schedule-content');
-        this.renderContent(contentDiv, {
-            startDate,
-            startTime,
-            onDateChange,
-            onTimeChange,
-            scheduleType,
-            interval,
-            onIntervalChange,
-            startDateTime,
-            onStartDateTimeChange,
-            endDateTime,
-            onEndDateTimeChange
+        // Подписываемся на изменения контекста
+        this.unsubscribe = TasksContext.subscribe((state) => {
+            if (this.element && this.element.isConnected) {
+                this.updateFromState(state);
+            }
         });
 
-        // Обработчики для радио кнопок
-        div.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                e.preventDefault();
-                onScheduleTypeChange(e.target.value);
-                this.renderContent(contentDiv, {
-                    startDate,
-                    startTime,
-                    onDateChange,
-                    onTimeChange,
-                    scheduleType: e.target.value,
-                    interval,
-                    onIntervalChange,
-                    startDateTime,
-                    onStartDateTimeChange,
-                    endDateTime,
-                    onEndDateTimeChange
-                });
-            });
-        });
+        // Первоначальный рендер
+        this.render(TasksContext.getState());
 
         return div;
     },
 
-    renderContent(container, props) {
-        if (props.scheduleType === 'once') {
-            container.innerHTML = this.renderOnceSchedule(props);
-            this.attachOnceHandlers(container, props);
+    render(state) {
+        const html = `
+            <h3 class="schedule-title">Расписание тестирования</h3>
+            
+            <div class="schedule-type">
+                <label class="radio-label">
+                    <input type="radio" name="scheduleType" value="once" ${state.scheduleType === 'once' ? 'checked' : ''}>
+                    <span>Задача отдельная</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="scheduleType" value="periodic" ${state.scheduleType === 'periodic' ? 'checked' : ''}>
+                    <span>Задача периодическая</span>
+                </label>
+            </div>
+            
+            <div id="schedule-content">
+                ${this.renderContent(state)}
+            </div>
+        `;
+
+        this.element.innerHTML = html;
+        this.attachEvents();
+    },
+
+    renderContent(state) {
+        if (state.scheduleType === 'once') {
+            return this.renderOnceSchedule(state);
         } else {
-            container.innerHTML = this.renderPeriodicSchedule(props);
-            this.attachPeriodicHandlers(container, props);
+            return this.renderPeriodicSchedule(state);
         }
     },
 
@@ -99,8 +71,7 @@ export const ScheduleBlock = {
             month: '2-digit',
             year: 'numeric',
             hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+            minute: '2-digit'
         })}
                     </div>
                 </div>
@@ -158,22 +129,53 @@ export const ScheduleBlock = {
         `;
     },
 
-    attachOnceHandlers(container, props) {
-        const dateInput = container.querySelector('#schedule-date');
-        const timeInput = container.querySelector('#schedule-time');
+    attachEvents() {
+        // Обработчики для радио кнопок типа расписания
+        this.element.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Schedule type changed to:', e.target.value);
+                TasksContext.handleScheduleTypeChange(e.target.value);
+            });
+        });
+
+        // Вешаем обработчики в зависимости от текущего типа
+        if (TasksContext.getState().scheduleType === 'once') {
+            this.attachOnceEvents();
+        } else {
+            this.attachPeriodicEvents();
+        }
+    },
+
+    attachOnceEvents() {
+        const dateInput = this.element.querySelector('#schedule-date');
+        const timeInput = this.element.querySelector('#schedule-time');
 
         if (dateInput) {
-            dateInput.addEventListener('change', (e) => props.onDateChange(e.target.value));
+            dateInput.addEventListener('change', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Date changed to:', e.target.value);
+                TasksContext.handleDateChange(e.target.value);
+            });
         }
 
         if (timeInput) {
-            timeInput.addEventListener('change', (e) => props.onTimeChange(e.target.value));
+            timeInput.addEventListener('change', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Time changed to:', e.target.value);
+                TasksContext.handleTimeChange(e.target.value);
+            });
         }
 
-        // Обработчики для радио кнопок
-        container.querySelectorAll('input[name="onceType"]').forEach(radio => {
+        // Обработчики для радио кнопок внутри once
+        this.element.querySelectorAll('input[name="onceType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                const customTimeDiv = container.querySelector('.custom-time');
+                e.preventDefault();
+                e.stopPropagation();
+                const customTimeDiv = this.element.querySelector('.custom-time');
                 if (customTimeDiv) {
                     customTimeDiv.style.opacity = e.target.value === 'custom' ? '1' : '0.5';
                 }
@@ -181,55 +183,152 @@ export const ScheduleBlock = {
         });
     },
 
-    // В методе attachPeriodicHandlers добавьте e.preventDefault()
-    attachPeriodicHandlers(container, props) {
-        const intervalValue = container.querySelector('#interval-value');
-        const intervalUnit = container.querySelector('#interval-unit');
-        const startDate = container.querySelector('#period-start-date');
-        const startTime = container.querySelector('#period-start-time');
-        const endDate = container.querySelector('#period-end-date');
-        const endTime = container.querySelector('#period-end-time');
+    attachPeriodicEvents() {
+        const intervalValue = this.element.querySelector('#interval-value');
+        const intervalUnit = this.element.querySelector('#interval-unit');
+        const startDate = this.element.querySelector('#period-start-date');
+        const startTime = this.element.querySelector('#period-start-time');
+        const endDate = this.element.querySelector('#period-end-date');
+        const endTime = this.element.querySelector('#period-end-time');
 
         if (intervalValue) {
             intervalValue.addEventListener('change', (e) => {
-                e.preventDefault(); // ДОБАВЛЯЕМ
-                props.onIntervalChange('value', e.target.value);
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Interval value changed to:', e.target.value);
+                TasksContext.handleIntervalChange('value', e.target.value);
             });
         }
 
         if (intervalUnit) {
             intervalUnit.addEventListener('change', (e) => {
-                e.preventDefault(); // ДОБАВЛЯЕМ
-                props.onIntervalChange('unit', e.target.value);
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Interval unit changed to:', e.target.value);
+                TasksContext.handleIntervalChange('unit', e.target.value);
             });
         }
 
         if (startDate) {
             startDate.addEventListener('change', (e) => {
-                e.preventDefault(); // ДОБАВЛЯЕМ
-                props.onStartDateTimeChange('date', e.target.value);
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Start date changed to:', e.target.value);
+                TasksContext.handleStartDateTimeChange('date', e.target.value);
             });
         }
 
         if (startTime) {
             startTime.addEventListener('change', (e) => {
-                e.preventDefault(); // ДОБАВЛЯЕМ
-                props.onStartDateTimeChange('time', e.target.value);
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Start time changed to:', e.target.value);
+                TasksContext.handleStartDateTimeChange('time', e.target.value);
             });
         }
 
         if (endDate) {
             endDate.addEventListener('change', (e) => {
-                e.preventDefault(); // ДОБАВЛЯЕМ
-                props.onEndDateTimeChange('date', e.target.value);
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('End date changed to:', e.target.value);
+                TasksContext.handleEndDateTimeChange('date', e.target.value);
             });
         }
 
         if (endTime) {
             endTime.addEventListener('change', (e) => {
-                e.preventDefault(); // ДОБАВЛЯЕМ
-                props.onEndDateTimeChange('time', e.target.value);
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('End time changed to:', e.target.value);
+                TasksContext.handleEndDateTimeChange('time', e.target.value);
             });
         }
+    },
+
+    updateFromState(state) {
+        if (!this.element) return;
+
+        console.log('ScheduleBlock updateFromState, scheduleType:', state.scheduleType);
+
+        // Проверяем, нужно ли перерисовать содержимое (изменился тип расписания)
+        const currentContent = this.element.querySelector('#schedule-content');
+        const currentType = currentContent?.querySelector('.once-schedule') ? 'once' :
+            (currentContent?.querySelector('.periodic-schedule') ? 'periodic' : null);
+
+        if (currentType !== state.scheduleType) {
+            // Тип изменился - перерисовываем содержимое
+            console.log('Schedule type changed, re-rendering content');
+            const contentDiv = this.element.querySelector('#schedule-content');
+            if (contentDiv) {
+                contentDiv.innerHTML = this.renderContent(state);
+                if (state.scheduleType === 'once') {
+                    this.attachOnceEvents();
+                } else {
+                    this.attachPeriodicEvents();
+                }
+            }
+        } else {
+            // Тип не изменился - обновляем только значения инпутов
+            console.log('Updating input values only');
+            if (state.scheduleType === 'once') {
+                this.updateOnceFields(state);
+            } else {
+                this.updatePeriodicFields(state);
+            }
+        }
+    },
+
+    updateOnceFields(state) {
+        const dateInput = this.element.querySelector('#schedule-date');
+        const timeInput = this.element.querySelector('#schedule-time');
+
+        if (dateInput && dateInput.value !== state.startDate) {
+            dateInput.value = state.startDate;
+        }
+
+        if (timeInput && timeInput.value !== state.startTime) {
+            timeInput.value = state.startTime;
+        }
+    },
+
+    updatePeriodicFields(state) {
+        const intervalValue = this.element.querySelector('#interval-value');
+        const intervalUnit = this.element.querySelector('#interval-unit');
+        const startDate = this.element.querySelector('#period-start-date');
+        const startTime = this.element.querySelector('#period-start-time');
+        const endDate = this.element.querySelector('#period-end-date');
+        const endTime = this.element.querySelector('#period-end-time');
+
+        if (intervalValue && parseInt(intervalValue.value) !== state.interval?.value) {
+            intervalValue.value = state.interval?.value || 120;
+        }
+
+        if (intervalUnit && intervalUnit.value !== state.interval?.unit) {
+            intervalUnit.value = state.interval?.unit || 'minutes';
+        }
+
+        if (startDate && startDate.value !== state.startDateTime?.date) {
+            startDate.value = state.startDateTime?.date || '';
+        }
+
+        if (startTime && startTime.value !== state.startDateTime?.time) {
+            startTime.value = state.startDateTime?.time || '';
+        }
+
+        if (endDate && endDate.value !== state.endDateTime?.date) {
+            endDate.value = state.endDateTime?.date || '';
+        }
+
+        if (endTime && endTime.value !== state.endDateTime?.time) {
+            endTime.value = state.endDateTime?.time || '00:00:00';
+        }
+    },
+
+    destroy() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+        this.element = null;
     }
 };
