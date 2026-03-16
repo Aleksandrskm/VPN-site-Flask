@@ -93,19 +93,24 @@ export const ResultTestsTable = {
         });
 
         // Закрытие по клику на оверлей
-        // modal.addEventListener('click', (e) => {
-        //     e.preventDefault();
-        //     e.stopPropagation();
-        //     if (e.target === modal) {
-        //         this.closeModal();
-        //     }
-        // });
+        modal.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target === modal) {
+                this.closeModal();
+            }
+        });
     },
 
     closeModal() {
         if (this.modalElement) {
             this.modalElement.style.display = 'none';
             this.state.taskDetail = null;
+
+            // Восстанавливаем обработчики на основной странице
+            setTimeout(() => {
+                this.refreshEventHandlers();
+            }, 100);
         }
     },
 
@@ -113,6 +118,29 @@ export const ResultTestsTable = {
         if (this.modalElement) {
             this.modalElement.style.display = 'flex';
         }
+    },
+
+    updatePageSizeSelect() {
+        const select = this.element.querySelector('#page-size');
+        if (select) {
+            select.value = this.state.pageSize.toString();
+        }
+    },
+
+    refreshEventHandlers() {
+        console.log('Обновление обработчиков событий');
+
+        // Обновляем обработчики для таблицы
+        this.attachDetailButtonListeners();
+
+        // Обновляем обработчики для поиска и пагинации
+        this.attachEventHandlers();
+
+        // Обновляем обработчики для пагинации
+        this.attachPaginationEvents();
+
+        // Обновляем значение select
+        this.updatePageSizeSelect();
     },
 
     async loadTasks() {
@@ -149,6 +177,7 @@ export const ResultTestsTable = {
 
             this.renderTable();
             this.renderPagination();
+            this.updatePageSizeSelect();
 
         } catch (error) {
             console.error('Ошибка:', error);
@@ -571,7 +600,8 @@ export const ResultTestsTable = {
             newPageSizeSelect.addEventListener('change', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                this.state.pageSize = parseInt(e.target.value);
+                const newValue = parseInt(e.target.value);
+                this.state.pageSize = newValue;
                 this.state.currentPage = 1;
                 this.state.searchQuery = '';
                 const input = this.element.querySelector('.search-input');
