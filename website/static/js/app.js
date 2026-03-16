@@ -1,32 +1,6 @@
 // Главный файл приложения
 // Глобальный перехват отправки форм
-document.addEventListener('submit', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🛑 Global form submit prevented');
-    return false;
-}, true);
 
-// Глобальный перехват кликов по кнопкам submit
-document.addEventListener('click', (e) => {
-    const target = e.target;
-    if (target.tagName === 'BUTTON' && target.type === 'submit') {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🛑 Global submit button click prevented');
-        return false;
-    }
-}, true);
-
-// Глобальный перехват нажатия Enter
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🛑 Global Enter key prevented');
-        return false;
-    }
-}, true);
 
 import { Header } from './components/Header.js';
 import { Modal } from './components/Modal.js';
