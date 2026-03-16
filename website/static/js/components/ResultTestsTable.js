@@ -93,13 +93,13 @@ export const ResultTestsTable = {
         });
 
         // Закрытие по клику на оверлей
-        modal.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.target === modal) {
-                this.closeModal();
-            }
-        });
+        // modal.addEventListener('click', (e) => {
+        //     e.preventDefault();
+        //     e.stopPropagation();
+        //     if (e.target === modal) {
+        //         this.closeModal();
+        //     }
+        // });
     },
 
     closeModal() {
