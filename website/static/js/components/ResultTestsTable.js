@@ -26,7 +26,7 @@ export const ResultTestsTable = {
 
         section.innerHTML = `
             <div class="tasks-header">
-                <h2>Все задачи</h2>
+                <h2>Завершенные задачи</h2>
                 <div class="tasks-controls">
                     <div class="search-box">
                         <input type="text" class="search-input" placeholder="Поиск по задачам..." value="${this.state.searchQuery}">
@@ -65,17 +65,17 @@ export const ResultTestsTable = {
         }
 
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'modal-detail-overlay'; // Изменено с 'modal-overlay' на 'modal-detail-overlay'
         modal.id = 'task-detail-modal';
         modal.style.display = 'none';
 
         modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Детали задачи</h3>
-                    <button class="modal-close">&times;</button>
+            <div class="modal-detail-content"> <!-- Изменено с 'modal-content' на 'modal-detail-content' -->
+                <div class="modal-detail-header"> <!-- Изменено с 'modal-header' на 'modal-detail-header' -->
+                    <h3>Результаты задачи</h3>
+                    <button class="modal-detail-close">&times;</button> <!-- Изменено с 'modal-close' на 'modal-detail-close' -->
                 </div>
-                <div class="modal-body" id="modal-body">
+                <div class="modal-detail-body" id="modal-body"> <!-- Изменено с 'modal-body' на 'modal-detail-body' -->
                     <div class="loading-state">Загрузка...</div>
                 </div>
             </div>
@@ -85,7 +85,7 @@ export const ResultTestsTable = {
         this.modalElement = modal;
 
         // Обработчик закрытия
-        const closeBtn = modal.querySelector('.modal-close');
+        const closeBtn = modal.querySelector('.modal-detail-close'); // Изменено с '.modal-close' на '.modal-detail-close'
         closeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -150,23 +150,43 @@ export const ResultTestsTable = {
         try {
             console.log('Загрузка страницы:', this.state.currentPage);
 
-            const response = await taskApi.getTasks(this.state.currentPage, this.state.pageSize);
+            const response = await taskApi.getTasks(this.state.currentPage, this.state.pageSize,'completed');
             console.log('Ответ:', response);
 
             if (response && response.tasks) {
                 this.state.tasks = response.tasks.map(task => ({
+                    // Основные поля
                     id: task.id,
                     workstation_id: task.workstation_id || '-',
                     workstation_ip: task.workstation_ip || '-',
                     started_at: task.started_at,
                     completed_at: task.completed_at,
                     duration_str: task.duration_str,
-                    status: this.mapStatus(task.status),
+
+                    // Статус задачи (1: Успешно, -1: Ошибка)
+                    status: task.status,
+
+                    // Конфигурация
                     config: task.config ? JSON.parse(task.config) : null,
-                    kol_vpn: task.vpn_total || 0,
-                    kol_site: task.sites_total || 0,
-                    kol_prg: task.programs_total || 0,
-                    http: task.comment || '-',
+
+                    // VPN статистика
+                    vpn_total: task.vpn_total || 0,
+                    vpn_connected: task.vpn_connected,
+                    vpn_failed: task.vpn_failed,
+
+                    // Сайты статистика
+                    sites_total: task.sites_total || 0,
+                    sites_checked: task.sites_checked,
+                    sites_available: task.sites_available,
+                    sites_unavailable: task.sites_unavailable,
+
+                    // Приложения статистика
+                    programs_total: task.programs_total || 0,
+                    programs_checked: task.programs_checked,
+                    programs_available: task.programs_available,
+                    programs_unavailable: task.programs_unavailable,
+
+                    // Комментарий
                     comment: task.comment || '-'
                 }));
 
@@ -192,7 +212,7 @@ export const ResultTestsTable = {
         this.state.taskDetail = null;
 
         const modalBody = this.modalElement.querySelector('#modal-body');
-        modalBody.innerHTML = '<div class="loading-state">Загрузка деталей...</div>';
+        modalBody.innerHTML = '<div class="loading-state">Загрузка...</div>';
         this.openModal();
 
         try {
@@ -280,7 +300,7 @@ export const ResultTestsTable = {
                                 window.close();
                             }
                         });
-                    </script>
+                    <\/script>
                 </body>
                 </html>
             `);
@@ -300,27 +320,29 @@ export const ResultTestsTable = {
             return;
         }
 
-        const hasPrograms = detail.programs_results && detail.programs_results.length > 0;
+        // --- Проверяем наличие данных для каждого блока ---
+        const hasVPNPrograms = detail.programs_results && detail.programs_results.length > 0;
         const hasSites = detail.sites_results && detail.sites_results.length > 0;
-        const hasUnconnected = (detail.unconnected_programs && detail.unconnected_programs.length > 0) ||
-            (detail.unconnected_sites && detail.unconnected_sites.length > 0) ||
-            (detail.unconnected_vpns && detail.unconnected_vpns.length > 0);
+
+        const hasUnconnectedVPNs = detail.unconnected_vpns && detail.unconnected_vpns.length > 0;
+        const hasUnconnectedPrograms = detail.unconnected_programs && detail.unconnected_programs.length > 0;
+        const hasUnconnectedSites = detail.unconnected_sites && detail.unconnected_sites.length > 0;
 
         let html = '<div class="task-detail-container">';
 
-        // Программы
+        // --- БЛОК 1: Результаты проверки приложений через VPN ---
         html += '<div class="detail-section">';
-        html += '<h4>Результаты программ</h4>';
+        html += '<h4>Результаты проверки приложений</h4>';
 
-        if (hasPrograms) {
+        if (hasVPNPrograms) {
             html += '<div class="results-grid">';
             detail.programs_results.forEach(item => {
                 const imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
                 html += `
                 <div class="result-card">
                     <div class="result-info">
-                        <div><strong>VPN:</strong> ${item.VPN || '-'}</div>
-                        <div><strong>Программа:</strong> ${item.PRG || '-'}</div>
+                        <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
+                        <div><strong>Приложение:</strong> ${item.PRG || '-'}</div>
                         <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
                         ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
                     </div>
@@ -334,13 +356,13 @@ export const ResultTestsTable = {
             });
             html += '</div>';
         } else {
-            html += '<div class="empty-section">Нет результатов по программам</div>';
+            html += '<div class="empty-section">Нет результатов по приложениям</div>';
         }
         html += '</div>';
 
-        // Сайты
+        // --- БЛОК 2: Результаты проверки сайтов через VPN ---
         html += '<div class="detail-section">';
-        html += '<h4>Результаты сайтов</h4>';
+        html += '<h4>Результаты проверки сайтов</h4>';
 
         if (hasSites) {
             html += '<div class="results-grid">';
@@ -349,7 +371,7 @@ export const ResultTestsTable = {
                 html += `
                 <div class="result-card">
                     <div class="result-info">
-                        <div><strong>VPN:</strong> ${item.VPN || '-'}</div>
+                        <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
                         <div><strong>Сайт:</strong> ${item.SITE || '-'}</div>
                         <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
                         ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
@@ -368,59 +390,71 @@ export const ResultTestsTable = {
         }
         html += '</div>';
 
-        // Неподключенные элементы
+        // --- БЛОК 3: Ошибки VPN ---
         html += '<div class="detail-section">';
-        html += '<h4>Неподключенные элементы</h4>';
+        html += '<h4>Ошибки VPN</h4>';
 
-        if (hasUnconnected) {
-            if (detail.unconnected_vpns && detail.unconnected_vpns.length > 0) {
-                html += '<div class="unconnected-items">';
-                detail.unconnected_vpns.forEach(item => {
-                    html += `
-                    <div class="unconnected-item">
-                        <div><strong>VPN:</strong> ${item.VPN || item}</div>
-                        <div class="error-message">${item.ERR || 'Ошибка подключения'}</div>
-                    </div>
-                `;
-                });
-                html += '</div>';
-            }
-
-            if (detail.unconnected_sites && detail.unconnected_sites.length > 0) {
-                html += '<div class="unconnected-items">';
-                detail.unconnected_sites.forEach(item => {
-                    const name = typeof item === 'object' ? (item.SITE || '-') : item;
-                    const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
-                    html += `
-                    <div class="unconnected-item">
-                        <div><strong>Сайт:</strong> ${name}</div>
-                        <div class="error-message">${error}</div>
-                    </div>
-                `;
-                });
-                html += '</div>';
-            }
-
-            if (detail.unconnected_programs && detail.unconnected_programs.length > 0) {
-                html += '<div class="unconnected-items">';
-                detail.unconnected_programs.forEach(item => {
-                    const name = typeof item === 'object' ? (item.PRG || '-') : item;
-                    const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
-                    html += `
-                    <div class="unconnected-item">
-                        <div><strong>Программа:</strong> ${name}</div>
-                        <div class="error-message">${error}</div>
-                    </div>
-                `;
-                });
-                html += '</div>';
-            }
+        if (hasUnconnectedVPNs) {
+            html += '<div class="unconnected-items">';
+            detail.unconnected_vpns.forEach(item => {
+                html += `
+                <div class="unconnected-item">
+                    <div><strong>VPN:</strong> ${item.VPN || item}</div>
+                    <div class="error-message">${item.ERR || 'Ошибка подключения'}</div>
+                </div>
+            `;
+            });
+            html += '</div>';
         } else {
-            html += '<div class="empty-section">Нет неподключенных элементов</div>';
+            html += '<div class="empty-section">Нет ошибок VPN</div>';
         }
         html += '</div>';
 
+        // --- БЛОК 4: Ошибки приложений ---
+        html += '<div class="detail-section">';
+        html += '<h4>Ошибки приложений</h4>';
+
+        if (hasUnconnectedPrograms) {
+            html += '<div class="unconnected-items">';
+            detail.unconnected_programs.forEach(item => {
+                const name = typeof item === 'object' ? (item.PRG || '-') : item;
+                const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
+                html += `
+                <div class="unconnected-item">
+                    <div><strong>Приложение:</strong> ${name}</div>
+                    <div class="error-message">${error}</div>
+                </div>
+            `;
+            });
+            html += '</div>';
+        } else {
+            html += '<div class="empty-section">Нет ошибок приложений</div>';
+        }
         html += '</div>';
+
+        // --- БЛОК 5: Ошибки сайтов ---
+        html += '<div class="detail-section">';
+        html += '<h4>Ошибки сайтов</h4>';
+
+        if (hasUnconnectedSites) {
+            html += '<div class="unconnected-items">';
+            detail.unconnected_sites.forEach(item => {
+                const name = typeof item === 'object' ? (item.SITE || '-') : item;
+                const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
+                html += `
+                <div class="unconnected-item">
+                    <div><strong>Сайт:</strong> ${name}</div>
+                    <div class="error-message">${error}</div>
+                </div>
+            `;
+            });
+            html += '</div>';
+        } else {
+            html += '<div class="empty-section">Нет ошибок сайтов</div>';
+        }
+        html += '</div>';
+
+        html += '</div>'; // Закрываем .task-detail-container
         modalBody.innerHTML = html;
 
         // Добавляем обработчики для скриншотов
@@ -467,13 +501,38 @@ export const ResultTestsTable = {
                         <th>ID АРМ</th>
                         <th>IP адрес</th>
                         <th>Время запуска</th>
-                        <th>Статус</th>
-                        <th>Конфигурация</th>
-                        <th>VPN</th>
-                        <th>Сайты</th>
-                        <th>Программы</th>
+                        <th>Время завершения</th>
                         <th>Длительность</th>
-                        <th>Детали</th>
+                        <th>Статус</th>
+                        <th colspan="3" class="section-header">VPN</th>
+                        <th colspan="4" class="section-header">Сайты</th>
+                        <th colspan="4" class="section-header">Приложения</th>
+                        <th>Комментарий</th>
+                        <th>Конфигурация</th>
+                        <th>Детализация</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th>Всего</th>
+                        <th>Подкл.</th>
+                        <th>Не подкл.</th>
+                        <th>Всего</th>
+                        <th>Провер.</th>
+                        <th>Доступ.</th>
+                        <th>Недоступ.</th>
+                        <th>Всего</th>
+                        <th>Провер.</th>
+                        <th>Доступ.</th>
+                        <th>Недоступ.</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -481,20 +540,37 @@ export const ResultTestsTable = {
 
         displayTasks.forEach(task => {
             html += `
-                <tr class="task-row status-${task.status}">
+                <tr class="task-row status-${this.getStatusClass(task.status)}">
                     <td class="task-id">#${task.id || '-'}</td>
                     <td class="task-workstation-id">${task.workstation_id}</td>
                     <td class="task-workstation-ip">${task.workstation_ip}</td>
                     <td class="task-time">${task.started_at ? DateUtils.getDateTime(new Date(task.started_at)) : '-'}</td>
-                    <td class="task-status">${this.getStatusText(task.status)}</td>
-                    <td class="task-config">${this.formatConfig(task.config)}</td>
-                    <td class="task-stats">${task.kol_vpn}</td>
-                    <td class="task-stats">${task.kol_site}</td>
-                    <td class="task-stats">${task.kol_prg}</td>
+                    <td class="task-time">${task.completed_at ? DateUtils.getDateTime(new Date(task.completed_at)) : '-'}</td>
                     <td class="task-duration">${task.duration_str || '-'}</td>
+                    <td class="task-status">${this.getStatusText(task.status)}</td>
+                    
+                    <!-- VPN статистика -->
+                    <td class="task-stats">${task.vpn_total}</td>
+                    <td class="task-stats ${this.getConnectedClass(task.vpn_connected, task.vpn_total)}">${task.vpn_connected ?? '-'}</td>
+                    <td class="task-stats ${this.getFailedClass(task.vpn_failed)}">${task.vpn_failed ?? '-'}</td>
+                    
+                    <!-- Сайты статистика -->
+                    <td class="task-stats">${task.sites_total}</td>
+                    <td class="task-stats">${task.sites_checked ?? '-'}</td>
+                    <td class="task-stats ${this.getAvailableClass(task.sites_available)}">${task.sites_available ?? '-'}</td>
+                    <td class="task-stats ${this.getUnavailableClass(task.sites_unavailable)}">${task.sites_unavailable ?? '-'}</td>
+                    
+                    <!-- Приложения статистика -->
+                    <td class="task-stats">${task.programs_total}</td>
+                    <td class="task-stats">${task.programs_checked ?? '-'}</td>
+                    <td class="task-stats ${this.getAvailableClass(task.programs_available)}">${task.programs_available ?? '-'}</td>
+                    <td class="task-stats ${this.getUnavailableClass(task.programs_unavailable)}">${task.programs_unavailable ?? '-'}</td>
+                    
+                    <td class="task-comment">${task.comment}</td>
+                    <td class="task-config">${this.formatConfig(task.config)}</td>
                     <td class="task-actions">
                         <button class="btn btn-primary btn-sm detail-btn" data-task-id="${task.id}">
-                            Детали
+                            Детализация
                         </button>
                     </td>
                 </tr>
@@ -509,6 +585,27 @@ export const ResultTestsTable = {
 
         // Добавляем обработчики для поиска и пагинации
         this.attachEventHandlers();
+    },
+
+    // Вспомогательные методы для стилизации ячеек
+    getConnectedClass(value, total) {
+        if (value === null || value === undefined) return '';
+        return value === total ? 'success-value' : 'warning-value';
+    },
+
+    getFailedClass(value) {
+        if (value === null || value === undefined) return '';
+        return value > 0 ? 'error-value' : '';
+    },
+
+    getAvailableClass(value) {
+        if (value === null || value === undefined) return '';
+        return value > 0 ? 'success-value' : '';
+    },
+
+    getUnavailableClass(value) {
+        if (value === null || value === undefined) return '';
+        return value > 0 ? 'error-value' : '';
     },
 
     attachDetailButtonListeners() {
@@ -770,25 +867,20 @@ export const ResultTestsTable = {
         this.renderPagination();
     },
 
-    mapStatus(status) {
-        const map = {
-            0: 'pending',
-            1: 'in_progress',
-            2: 'completed',
-            3: 'failed'
-        };
-        return map[status] || 'unknown';
+    getStatusClass(status) {
+        if (status === 2) return 'completed';
+        if (status === 1) return 'in-progress';
+        if (status === -1) return 'failed';
+        return 'unknown';
     },
 
     getStatusText(status) {
         const map = {
-            'pending': 'Ожидает',
-            'in_progress': 'Выполняется',
-            'completed': 'Завершена',
-            'failed': 'Ошибка',
-            'unknown': 'Неизвестно'
+            1: 'В процессе',
+            2: 'Завершена',
+            '-1': 'Ошибка'
         };
-        return map[status] || status;
+        return map[status] || 'Неизвестно';
     },
 
     formatConfig(config) {
@@ -797,7 +889,7 @@ export const ResultTestsTable = {
         const items = [];
         if (config.vpns?.length) items.push(`VPN: ${config.vpns.length}`);
         if (config.urls?.length) items.push(`URL: ${config.urls.length}`);
-        if (config.programs?.length) items.push(`Программы: ${config.programs.length}`);
+        if (config.programs?.length) items.push(`Приложения: ${config.programs.length}`);
 
         return items.join(' • ') || 'Нет конфигурации';
     },

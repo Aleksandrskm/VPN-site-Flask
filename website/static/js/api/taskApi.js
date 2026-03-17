@@ -37,10 +37,10 @@ export const taskApi = {
         }
     },
 
-    async getTasks(page = 1, pageSize = 10) {
+    async getTasks(page = 1, pageSize = 10,type ='all', sort = 'desc') {
         try {
 
-            const url = `${API_CONFIG.baseUrl}${ENDPOINTS.TASK.GET_TASKS(page, pageSize)}`;
+            const url = `${API_CONFIG.baseUrl}${ENDPOINTS.TASK.GET_TASKS(page, pageSize,type,sort)}`;
             console.log('Request URL:', url); // Для отладки
 
             const response = await fetch(url, {

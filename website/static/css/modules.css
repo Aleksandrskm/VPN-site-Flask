@@ -1024,82 +1024,173 @@
     border-color: #80bdff;
 }
 
+/* ===== УЛУЧШЕНИЯ ДЛЯ ТАБЛИЦЫ ЗАДАЧ ===== */
 .tasks-table-container {
     flex: 1;
     overflow: auto;
     margin-bottom: 20px;
     border: 1px solid #dee2e6;
-    border-radius: 4px;
+    border-radius: 6px;
     background: white;
     min-height: 300px;
     max-height: calc(100vh - 300px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .tasks-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 800px;
+    min-width: 1400px;
+    font-size: 14px;
 }
 
 .tasks-table th {
     background: #f8f9fa;
-    padding: 12px 15px;
+    padding: 14px 16px;
     text-align: left;
     font-weight: 600;
-    color: #495057;
-    border-bottom: 2px solid #dee2e6;
+    color: #2c3e50;
+    border-bottom: 2px solid #007bff;
     cursor: pointer;
     white-space: nowrap;
     user-select: none;
     position: sticky;
     top: 0;
-    background: #f8f9fa;
     z-index: 10;
-    box-shadow: 0 1px 0 0 #dee2e6;
+    box-shadow: 0 2px 0 0 #dee2e6;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
 }
 
-.tasks-table th.sortable:hover {
+.tasks-table th.section-header {
     background: #e9ecef;
-}
-
-.tasks-table th.sortable::after {
-    content: ' ️';
-    opacity: 0.5;
-    font-size: 12px;
-    margin-left: 5px;
-}
-
-.tasks-table th.sorted-asc::after {
-    content: ' ↑';
-    opacity: 1;
-}
-
-.tasks-table th.sorted-desc::after {
-    content: ' ↓';
-    opacity: 1;
+    color: #495057;
+    border-bottom: 2px solid #6c757d;
+    text-align: center;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .tasks-table td {
-    padding: 10px 15px;
-    border-bottom: 1px solid #dee2e6;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
     color: #212529;
+    line-height: 1.5;
+    vertical-align: middle;
+}
+
+/* Фиксированная ширина для определенных колонок */
+.tasks-table td.task-id {
+    font-weight: 600;
+    color: #007bff;
+    min-width: 70px;
+}
+
+.tasks-table td.task-workstation-id,
+.tasks-table td.task-workstation-ip {
+    font-family: monospace;
+    font-size: 13px;
+    min-width: 100px;
+}
+
+.tasks-table td.task-time {
+    white-space: nowrap;
+    font-size: 13px;
+    color: #6c757d;
+    min-width: 140px;
+}
+
+.tasks-table td.task-duration {
+    font-weight: 500;
+    color: #28a745;
+    min-width: 80px;
+}
+
+.tasks-table td.task-stats {
+    text-align: center;
+    font-weight: 500;
+    min-width: 50px;
+}
+
+.tasks-table td.task-comment {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #6c757d;
+}
+
+.tasks-table td.task-config {
+    min-width: 150px;
+    white-space: nowrap;
+}
+
+.tasks-table td.task-actions {
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Стили для статусов */
+.tasks-table td.task-status {
+    font-weight: 600;
+    min-width: 100px;
+}
+
+.task-row.status-completed .task-status {
+    color: #28a745;
+}
+
+.task-row.status-failed .task-status {
+    color: #dc3545;
+}
+
+.task-row.status-in-progress .task-status {
+    color: #ffc107;
+}
+
+/* Стили для статистики */
+.success-value {
+    color: #28a745 !important;
+    font-weight: 600;
+}
+
+.warning-value {
+    color: #ffc107 !important;
+    font-weight: 600;
+}
+
+.error-value {
+    color: #dc3545 !important;
+    font-weight: 600;
 }
 
 .tasks-table tbody tr {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.15s ease;
 }
 
 .tasks-table tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: #f1f9ff;
 }
 
+.tasks-table tbody tr.status-failed:hover {
+    background-color: #ffe6e8;
+}
+
+.tasks-table tbody tr.status-completed:hover {
+    background-color: #e3f7e7;
+}
+
+/* Стили для бейджей статусов */
 .status-badge {
     display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
+    padding: 5px 10px;
+    border-radius: 20px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
+    text-align: center;
+    min-width: 90px;
 }
 
 .status-pending {
@@ -1132,17 +1223,20 @@
     border: 1px solid #d6d8db;
 }
 
+/* Стили для бейджа конфигурации */
 .config-badge {
     display: inline-block;
-    padding: 4px 8px;
+    padding: 5px 10px;
     background: #f8f9fa;
-    border-radius: 4px;
+    border-radius: 20px;
     font-size: 12px;
-    color: #6c757d;
+    color: #495057;
     white-space: nowrap;
     border: 1px solid #dee2e6;
+    font-weight: 500;
 }
 
+/* ===== УЛУЧШЕНИЯ ДЛЯ ПАГИНАЦИИ ===== */
 .pagination-container {
     display: flex;
     justify-content: space-between;
@@ -1151,25 +1245,104 @@
     gap: 15px;
     margin-top: 20px;
     flex-shrink: 0;
-    padding-top: 15px;
-    border-top: 1px solid #dee2e6;
+    padding: 15px 10px 5px 10px;
+    border-top: 2px solid #e9ecef;
+    background: white;
+    border-radius: 0 0 8px 8px;
 }
 
 .pagination-info {
-    color: #6c757d;
+    color: #495057;
     font-size: 14px;
+    font-weight: 500;
+    background: #f8f9fa;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #dee2e6;
 }
 
 .pagination-controls {
     display: flex;
-    gap: 5px;
+    gap: 6px;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.pagination-controls .btn {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.pagination-controls .btn-primary {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+}
+
+.pagination-controls .btn-primary:hover:not(:disabled) {
+    background: #0069d9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+}
+
+.pagination-controls .btn-secondary {
+    background: white;
+    border-color: #dee2e6;
+    color: #495057;
+}
+
+.pagination-controls .btn-secondary:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    transform: translateY(-1px);
+}
+
+.pagination-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #e9ecef;
+    border-color: #dee2e6;
 }
 
 .pagination-dots {
     padding: 0 5px;
     color: #6c757d;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Стили для кнопки детализации */
+.detail-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 90px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+}
+
+.detail-btn:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+}
+
+.detail-btn:active {
+    transform: translateY(0);
 }
 
 /* Состояния загрузки и ошибок */
@@ -1225,6 +1398,12 @@
 }
 
 /* Адаптивность для ViewPlanTasks */
+@media (max-width: 1200px) {
+    .tasks-table {
+        min-width: 1300px;
+    }
+}
+
 @media (max-width: 992px) {
     .tasks-header {
         flex-direction: column;
@@ -1248,6 +1427,10 @@
     .tasks-table-container {
         max-height: calc(100vh - 350px);
     }
+
+    .tasks-table {
+        min-width: 1200px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1261,7 +1444,13 @@
 
     .pagination-container {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+    }
+
+    .pagination-info {
+        text-align: center;
+        width: auto;
+        align-self: center;
     }
 
     .pagination-controls {
@@ -1319,6 +1508,8 @@
     .pagination-controls .btn {
         padding: 6px 10px;
         font-size: 12px;
+        min-width: 34px;
+        height: 34px;
     }
 
     .tasks-table-container {
@@ -1335,6 +1526,7 @@
     .status-badge {
         padding: 3px 6px;
         font-size: 11px;
+        min-width: 70px;
     }
 
     .config-badge {
@@ -1357,6 +1549,12 @@
     .error-state .error-icon,
     .empty-state .empty-icon {
         font-size: 40px;
+    }
+
+    .detail-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+        min-width: 70px;
     }
 }
 
@@ -1394,8 +1592,9 @@
         font-size: 1.2rem;
     }
 }
-/* Стили для модального окна детализации задач */
-.modal-overlay {
+
+/* ===== СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ДЕТАЛИЗАЦИИ ЗАДАЧ ===== */
+.modal-detail-overlay {
     display: none;
     position: fixed;
     top: 0;
@@ -1409,29 +1608,29 @@
     backdrop-filter: blur(3px);
 }
 
-#task-detail-modal {
+.modal-detail {
     display: none;
 }
 
-#task-detail-modal.show,
-#task-detail-modal[style*="display: flex"] {
+.modal-detail.show,
+.modal-detail[style*="display: flex"] {
     display: flex !important;
 }
 
-.modal-content {
+.modal-detail-content {
     background-color: white;
     border-radius: 12px;
-    max-width: 1100px;
+    max-width: 1300px;
     width: 95%;
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    animation: modalSlideIn 0.3s ease;
+    animation: modalDetailSlideIn 0.3s ease;
 }
 
-@keyframes modalSlideIn {
+@keyframes modalDetailSlideIn {
     from {
         transform: translateY(-30px);
         opacity: 0;
@@ -1442,20 +1641,19 @@
     }
 }
 
-.modal-header {
+.modal-detail-header {
     padding: 18px 24px;
     border-bottom: 2px solid #007bff;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /*position: sticky;*/
     top: 0;
     background-color: white;
     z-index: 10;
     border-radius: 12px 12px 0 0;
 }
 
-.modal-header h3 {
+.modal-detail-header h3 {
     margin: 0;
     font-size: 1.4rem;
     color: #333;
@@ -1464,7 +1662,7 @@
     text-align: center;
 }
 
-.modal-close {
+.modal-detail-close {
     background: none;
     border: none;
     font-size: 28px;
@@ -1481,13 +1679,13 @@
     padding: 0;
 }
 
-.modal-close:hover {
+.modal-detail-close:hover {
     background-color: #f8f9fa;
     color: #dc3545;
     transform: rotate(90deg);
 }
 
-.modal-body {
+.modal-detail-body {
     padding: 24px;
     overflow-y: auto;
     flex: 1;
@@ -1517,9 +1715,18 @@
     font-weight: 600;
 }
 
+.detail-section h5 {
+    margin: 15px 0 10px 0;
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 600;
+    border-left: 3px solid #ffc107;
+    padding-left: 10px;
+}
+
 .results-grid {
     display: grid;
-    /*grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));*/
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 20px;
 }
 
@@ -1567,6 +1774,14 @@
     font-weight: 600;
 }
 
+.result-info .vpn-name {
+    font-weight: 600;
+    color: #007bff;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 8px;
+    margin-bottom: 5px;
+}
+
 .result-info div:has(> strong) {
     display: flex;
     align-items: baseline;
@@ -1574,16 +1789,14 @@
 }
 
 /* Статус доступности */
-.result-info div:contains('Доступ') {
-    font-weight: 500;
-}
-
-.result-info div:contains('✓ Доступен') {
+.result-info .status-available {
     color: #28a745;
+    font-weight: 600;
 }
 
-.result-info div:contains('✗ Недоступен') {
+.result-info .status-unavailable {
     color: #dc3545;
+    font-weight: 600;
 }
 
 /* Стили для скриншотов - УВЕЛИЧЕНЫ */
@@ -1602,8 +1815,8 @@
 
 .result-screenshot img {
     max-width: 100%;
-    max-height: 600px;
-    width: 40%;
+    max-height: 400px;
+    width: auto;
     height: auto;
     border: 2px solid #dee2e6;
     border-radius: 8px;
@@ -1611,6 +1824,7 @@
     transition: all 0.3s ease;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin: 0 auto;
+    object-fit: contain;
 }
 
 .result-screenshot img:hover {
@@ -1621,7 +1835,7 @@
 
 /* Индикатор для открытия в новом окне */
 .result-screenshot::after {
-    content: '';
+    content: 'Кликните для увеличения';
     display: block;
     font-size: 12px;
     color: #6c757d;
@@ -1635,7 +1849,7 @@
     color: #007bff;
 }
 
-.empty-message {
+.empty-section {
     color: #6c757d;
     font-style: italic;
     text-align: center;
@@ -1647,18 +1861,24 @@
 }
 
 /* Неподключенные элементы */
+.unconnected-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .unconnected-item {
     background-color: #fff3cd;
     border: 1px solid #ffeeba;
     color: #856404;
     padding: 12px 16px;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 0;
     font-size: 14px;
     line-height: 1.6;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .unconnected-item::before {
@@ -1668,68 +1888,197 @@
 
 .unconnected-item strong {
     color: #856404;
-    min-width: 70px;
+    min-width: 80px;
     font-weight: 600;
 }
 
-/* Состояния загрузки */
-.loading-state {
+.unconnected-item .error-message {
+    color: #856404;
+    background: rgba(255, 193, 7, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 0;
+    flex: 1;
+}
+
+/* ===== СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА РЕДАКТИРОВАНИЯ ДАННЫХ ===== */
+.modal-edit-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.modal-edit {
+    display: none;
+}
+
+.modal-edit.show,
+.modal-edit[style*="display: flex"] {
+    display: flex !important;
+}
+
+.modal-edit-content {
+    background-color: white;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 95%;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
+    animation: modalEditSlideIn 0.2s ease;
+}
+
+@keyframes modalEditSlideIn {
+    from {
+        transform: translateY(-20px) scale(0.98);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-edit-header {
+    padding: 16px 20px;
+    border-bottom: 2px solid #28a745;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-edit-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.modal-edit-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #6c757d;
+    width: 36px;
+    height: 36px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 300px;
-    text-align: center;
-    padding: 40px;
-    background: white;
-    border-radius: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    padding: 0;
 }
 
-.loading-state .spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #007bff;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
+.modal-edit-close:hover {
+    background-color: #e9ecef;
+    color: #dc3545;
 }
 
-.error-state {
-    text-align: center;
-    padding: 40px;
-    color: #721c24;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 8px;
-    margin: 20px;
+.modal-edit-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
 }
 
-.error-state::before {
-    content: '❌';
+.modal-edit-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    background-color: #f8f9fa;
+}
+
+.modal-edit-footer .btn {
+    min-width: 100px;
+    padding: 8px 16px;
+}
+
+/* Форма в модальном окне редактирования */
+.modal-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-edit-form .form-group {
+    margin-bottom: 0;
+}
+
+.modal-edit-form label {
     display: block;
-    font-size: 48px;
-    margin-bottom: 20px;
-    opacity: 0.8;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
 }
 
-/* Адаптивность */
+.modal-edit-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-edit-form input:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.modal-edit-form input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.modal-edit-form input::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+/* Пустое состояние полей */
+.modal-edit .empty-fields {
+    padding: 30px 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+/* Адаптивность для модальных окон */
 @media (max-width: 768px) {
-    .modal-content {
+    .modal-detail-content {
         width: 98%;
         max-height: 90vh;
-        overflow: auto;
     }
 
-    .modal-header {
+    .modal-detail-header {
         padding: 15px 20px;
     }
 
-    .modal-header h3 {
+    .modal-detail-header h3 {
         font-size: 1.2rem;
     }
 
-    .modal-body {
+    .modal-detail-body {
         padding: 15px;
     }
 
@@ -1761,7 +2110,7 @@
     }
 
     .result-screenshot img {
-        max-height: 200px;
+        max-height: 250px;
     }
 
     .unconnected-item {
@@ -1769,27 +2118,56 @@
         font-size: 13px;
         flex-wrap: wrap;
     }
+
+    .unconnected-item::before {
+        display: none;
+    }
+
+    .modal-edit-content {
+        width: 98%;
+        max-height: 85vh;
+    }
+
+    .modal-edit-header {
+        padding: 14px 16px;
+    }
+
+    .modal-edit-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .modal-edit-body {
+        padding: 16px;
+    }
+
+    .modal-edit-footer {
+        padding: 14px 16px;
+    }
+
+    .modal-edit-footer .btn {
+        min-width: 90px;
+        padding: 8px 12px;
+    }
 }
 
 @media (max-width: 480px) {
-    .modal-content {
+    .modal-detail-content {
         width: 100%;
         height: 100%;
         max-height: 100vh;
-        overflow: auto;
         border-radius: 0;
     }
 
-    .modal-header {
+    .modal-detail-header {
         border-radius: 0;
         padding: 12px 16px;
     }
 
-    .modal-header h3 {
+    .modal-detail-header h3 {
         font-size: 1.1rem;
     }
 
-    .modal-body {
+    .modal-detail-body {
         padding: 12px;
     }
 
@@ -1800,6 +2178,11 @@
     .detail-section h4 {
         font-size: 1rem;
         padding-bottom: 6px;
+    }
+
+    .detail-section h5 {
+        font-size: 0.9rem;
+        margin-top: 10px;
     }
 
     .results-grid {
@@ -1822,7 +2205,7 @@
     }
 
     .result-screenshot img {
-        max-height: 180px;
+        max-height: 200px;
     }
 
     .result-screenshot::after {
@@ -1834,36 +2217,61 @@
         font-size: 12px;
         flex-direction: column;
         align-items: flex-start;
+        gap: 5px;
     }
 
-    .loading-state {
-        min-height: 200px;
-        padding: 20px;
+    .unconnected-item strong {
+        min-width: auto;
     }
 
-    .loading-state .spinner {
-        width: 40px;
-        height: 40px;
+    .unconnected-item .error-message {
+        width: 100%;
+        margin-top: 5px;
     }
 
-    .error-state {
-        padding: 20px;
-        margin: 10px;
+    .modal-edit-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
     }
 
-    .error-state::before {
-        font-size: 36px;
+    .modal-edit-header {
+        border-radius: 0;
+        padding: 12px 14px;
+    }
+
+    .modal-edit-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .modal-edit-body {
+        padding: 14px;
+    }
+
+    .modal-edit-footer {
+        padding: 12px 14px;
+        flex-direction: column;
+    }
+
+    .modal-edit-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+
+    .modal-edit-form input {
+        padding: 8px 10px;
+        font-size: 16px;
     }
 }
 
 /* Landscape ориентация */
 @media (max-height: 600px) and (orientation: landscape) {
-    .modal-content {
+    .modal-detail-content {
         max-height: 95vh;
-        overflow: auto;
     }
 
-    .modal-body {
+    .modal-detail-body {
         padding: 12px;
     }
 
@@ -1877,19 +2285,26 @@
     }
 
     .result-screenshot img {
-        max-height: 150px;
+        max-height: 200px;
+    }
+
+    .modal-edit-content {
+        max-height: 95vh;
+    }
+
+    .modal-edit-body {
+        padding: 12px;
     }
 }
 
 /* Стили для очень больших экранов */
 @media (min-width: 1600px) {
-    .modal-content {
-        max-width: 1300px;
-        overflow: auto;
+    .modal-detail-content {
+        max-width: 1500px;
     }
 
     .results-grid {
-        /*grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));*/
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
     }
 
     .result-screenshot img {
@@ -1897,22 +2312,26 @@
     }
 }
 
-/* Стили для скролла в модальном окне */
-.modal-body::-webkit-scrollbar {
+/* Стили для скролла в модальных окнах */
+.modal-detail-body::-webkit-scrollbar,
+.modal-edit-body::-webkit-scrollbar {
     width: 10px;
 }
 
-.modal-body::-webkit-scrollbar-track {
+.modal-detail-body::-webkit-scrollbar-track,
+.modal-edit-body::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 5px;
 }
 
-.modal-body::-webkit-scrollbar-thumb {
+.modal-detail-body::-webkit-scrollbar-thumb,
+.modal-edit-body::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 5px;
 }
 
-.modal-body::-webkit-scrollbar-thumb:hover {
+.modal-detail-body::-webkit-scrollbar-thumb:hover,
+.modal-edit-body::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
 
@@ -1939,4 +2358,3 @@
     border-radius: 4px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
-
