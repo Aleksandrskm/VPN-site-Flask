@@ -1097,13 +1097,13 @@
 .tasks-table td.task-time {
     white-space: nowrap;
     font-size: 13px;
-    color: #6c757d;
+    color: black;
     min-width: 140px;
 }
 
 .tasks-table td.task-duration {
-    font-weight: 500;
-    color: #28a745;
+    /*font-weight: 500;*/
+    color: black;
     min-width: 80px;
 }
 
@@ -1133,35 +1133,35 @@
 
 /* Стили для статусов */
 .tasks-table td.task-status {
-    font-weight: 600;
+    /*font-weight: 600;*/
     min-width: 100px;
 }
 
 .task-row.status-completed .task-status {
-    color: #28a745;
+    color: black;
 }
 
 .task-row.status-failed .task-status {
-    color: #dc3545;
+    color: black;
 }
 
 .task-row.status-in-progress .task-status {
-    color: #ffc107;
+    color: black;
 }
 
 /* Стили для статистики */
 .success-value {
-    color: #28a745 !important;
+    color: black !important;
     font-weight: 600;
 }
 
 .warning-value {
-    color: #ffc107 !important;
+    color: black !important;
     font-weight: 600;
 }
 
 .error-value {
-    color: #dc3545 !important;
+    color: black !important;
     font-weight: 600;
 }
 
