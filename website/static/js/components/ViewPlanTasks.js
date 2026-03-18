@@ -5,9 +5,6 @@ import { DateUtils } from '../utils/dateUtils.js';
 export const ViewPlanTasks = {
     element: null,
 
-    // Хранилище для обработчиков событий
-    eventListeners: [],
-
     state: {
         tasks: [],
         currentPage: 1,
@@ -48,68 +45,30 @@ export const ViewPlanTasks = {
 
         this.element = section;
 
-        // Вешаем постоянные обработчики
-        this.attachStaticEvents();
-
         // Загружаем данные
         await this.loadTasks();
 
         return section;
     },
 
-    // Очистка всех обработчиков событий
-    clearEventListeners() {
-        this.eventListeners.forEach(({ element, type, handler }) => {
-            element.removeEventListener(type, handler);
-        });
-        this.eventListeners = [];
+    refreshEventHandlers() {
+        console.log('Обновление обработчиков событий');
+
+        // Обновляем обработчики для поиска и пагинации
+        this.attachEventHandlers();
+
+        // Обновляем обработчики для пагинации
+        this.attachPaginationEvents();
+
+        // Обновляем значение select
+        this.updatePageSizeSelect();
     },
 
-    // Добавление обработчика с сохранением
-    addSafeEventListener(element, type, handler) {
-        if (!element) return;
-        element.addEventListener(type, handler);
-        this.eventListeners.push({ element, type, handler });
-    },
-
-    // Постоянные обработчики (не пересоздаются)
-    attachStaticEvents() {
-        // Поиск по кнопке
-        const searchBtn = this.element.querySelector('#search-btn');
-        this.addSafeEventListener(searchBtn, 'click', () => {
-            const input = this.element.querySelector('.search-input');
-            this.state.searchQuery = input.value;
-            this.applySearch();
-        });
-
-        // Сброс поиска
-        const clearBtn = this.element.querySelector('#clear-search');
-        this.addSafeEventListener(clearBtn, 'click', () => {
-            const input = this.element.querySelector('.search-input');
-            input.value = '';
-            this.state.searchQuery = '';
-            this.applySearch();
-        });
-
-        // Поиск при нажатии Enter
-        const searchInput = this.element.querySelector('.search-input');
-        this.addSafeEventListener(searchInput, 'keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.state.searchQuery = e.target.value;
-                this.applySearch();
-            }
-        });
-
-        // Изменение размера страницы
-        const pageSizeSelect = this.element.querySelector('#page-size');
-        this.addSafeEventListener(pageSizeSelect, 'change', (e) => {
-            this.state.pageSize = parseInt(e.target.value);
-            this.state.currentPage = 1;
-            this.state.searchQuery = '';
-            const input = this.element.querySelector('.search-input');
-            if (input) input.value = '';
-            this.loadTasks();
-        });
+    updatePageSizeSelect() {
+        const select = this.element.querySelector('#page-size');
+        if (select) {
+            select.value = this.state.pageSize.toString();
+        }
     },
 
     async loadTasks() {
@@ -119,20 +78,43 @@ export const ViewPlanTasks = {
         try {
             console.log('Загрузка страницы:', this.state.currentPage);
 
-            const response = await taskApi.getTasks(this.state.currentPage, this.state.pageSize);
+            const response = await taskApi.getTasks(this.state.currentPage, this.state.pageSize, 'awaits');
             console.log('Ответ:', response);
 
             if (response && response.tasks) {
                 this.state.tasks = response.tasks.map(task => ({
+                    // Основные поля
                     id: task.id,
-                    workstation_name: task.workstation_ip ? `АРМ-${task.workstation_ip}` : (task.workstation_id ? `АРМ-${task.workstation_id}` : '-'),
+                    workstation_id: task.workstation_id || '-',
+                    workstation_ip: task.workstation_ip || '-',
                     started_at: task.started_at,
-                    status: this.mapStatus(task.status),
+                    completed_at: task.completed_at,
+                    duration_str: task.duration_str,
+
+                    // Статус задачи (0: Ожидает, 1: Выполняется, 2: Завершена, -1: Ошибка)
+                    status: task.status,
+
+                    // Конфигурация
                     config: task.config ? JSON.parse(task.config) : null,
-                    kol_vpn: task.vpn_total || 0,
-                    kol_site: task.sites_total || 0,
-                    kol_prg: task.programs_total || 0,
-                    http: task.comment || '-',
+
+                    // VPN статистика
+                    vpn_total: task.vpn_total || 0,
+                    vpn_connected: task.vpn_connected,
+                    vpn_failed: task.vpn_failed,
+
+                    // Сайты статистика
+                    sites_total: task.sites_total || 0,
+                    sites_checked: task.sites_checked,
+                    sites_available: task.sites_available,
+                    sites_unavailable: task.sites_unavailable,
+
+                    // Приложения статистика
+                    programs_total: task.programs_total || 0,
+                    programs_checked: task.programs_checked,
+                    programs_available: task.programs_available,
+                    programs_unavailable: task.programs_unavailable,
+
+                    // Комментарий
                     comment: task.comment || '-'
                 }));
 
@@ -143,6 +125,7 @@ export const ViewPlanTasks = {
 
             this.renderTable();
             this.renderPagination();
+            this.updatePageSizeSelect();
 
         } catch (error) {
             console.error('Ошибка:', error);
@@ -164,15 +147,39 @@ export const ViewPlanTasks = {
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>АРМ</th>
-                        <th>Время запуска</th>
+                        <th>Идентификатор АРМ</th>
+                        <th>IP-адрес АРМ</th>
+                        <th>Дата и время начала проверки</th>
+                        <th>Дата и время окончания проверки</th>
+                        <th>Время выполнения задачи</th>
                         <th>Статус</th>
-                        <th>Конфигурация</th>
-                        <th>VPN</th>
-                        <th>Сайты</th>
-                        <th>Программы</th>
-                        <th>HTTP</th>
-                        <th>Комментарий</th>
+                        <th colspan="3" class="section-header">VPN</th>
+                        <th colspan="4" class="section-header">Сайты</th>
+                        <th colspan="4" class="section-header">Приложения</th>
+                        <th>Комментарий к проверке</th>
+                        <th>Конфигурация задачи</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th>Количество VPN из конфигурации</th>
+                        <th>Количество подключенных VPN</th>
+                        <th>Количество неподключенных VPN</th>
+                        <th>Количество сайтов из конфигурации</th>
+                        <th>Количество сайтов из отчета</th>
+                        <th>Количество доступных сайтов</th>
+                        <th>Количество недоступных сайтов</th>
+                        <th>Количество приложений из конфигурации</th>
+                        <th>Количество приложений из отчета</th>
+                        <th>Количество доступных приложений</th>
+                        <th>Количество недоступных приложений</th>
+                        <th></th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -180,23 +187,132 @@ export const ViewPlanTasks = {
 
         displayTasks.forEach(task => {
             html += `
-                <tr>
-                    <td>${task.id || '-'}</td>
-                    <td>${task.workstation_name || '-'}</td>
-                    <td>${task.started_at ? DateUtils.getDateTime(new Date(task.started_at)) : '-'}</td>
-                    <td>${this.getStatusText(task.status)}</td>
-                    <td>${this.formatConfig(task.config)}</td>
-                    <td>${task.kol_vpn}</td>
-                    <td>${task.kol_site}</td>
-                    <td>${task.kol_prg}</td>
-                    <td>${task.http}</td>
-                    <td>${task.comment}</td>
+                <tr class="task-row status-${this.getStatusClass(task.status)}">
+                    <td class="task-id">#${task.id || '-'}</td>
+                    <td class="task-workstation-id">${task.workstation_id}</td>
+                    <td class="task-workstation-ip">${task.workstation_ip}</td>
+                    <td class="task-time">${task.started_at ? DateUtils.getDateTime(new Date(task.started_at)) : '-'}</td>
+                    <td class="task-time">${task.completed_at ? DateUtils.getDateTime(new Date(task.completed_at)) : '-'}</td>
+                    <td class="task-duration">${task.duration_str || '-'}</td>
+                    <td class="task-status">${this.getStatusText(task.status)}</td>
+                    
+                    <!-- VPN статистика -->
+                    <td class="task-stats">${task.vpn_total}</td>
+                    <td class="task-stats ${this.getConnectedClass(task.vpn_connected, task.vpn_total)}">${task.vpn_connected ?? '-'}</td>
+                    <td class="task-stats ${this.getFailedClass(task.vpn_failed)}">${task.vpn_failed ?? '-'}</td>
+                    
+                    <!-- Сайты статистика -->
+                    <td class="task-stats">${task.sites_total}</td>
+                    <td class="task-stats">${task.sites_checked ?? '-'}</td>
+                    <td class="task-stats ${this.getAvailableClass(task.sites_available)}">${task.sites_available ?? '-'}</td>
+                    <td class="task-stats ${this.getUnavailableClass(task.sites_unavailable)}">${task.sites_unavailable ?? '-'}</td>
+                    
+                    <!-- Приложения статистика -->
+                    <td class="task-stats">${task.programs_total}</td>
+                    <td class="task-stats">${task.programs_checked ?? '-'}</td>
+                    <td class="task-stats ${this.getAvailableClass(task.programs_available)}">${task.programs_available ?? '-'}</td>
+                    <td class="task-stats ${this.getUnavailableClass(task.programs_unavailable)}">${task.programs_unavailable ?? '-'}</td>
+                    
+                    <td class="task-comment">${task.comment}</td>
+                    <td class="task-config">${this.formatConfig(task.config)}</td>
                 </tr>
             `;
         });
 
         html += '</tbody></table>';
         container.innerHTML = html;
+
+        // Добавляем обработчики для поиска и пагинации
+        this.attachEventHandlers();
+    },
+
+    // Вспомогательные методы для стилизации ячеек
+    getConnectedClass(value, total) {
+        if (value === null || value === undefined) return '';
+        return value === total ? 'success-value' : 'warning-value';
+    },
+
+    getFailedClass(value) {
+        if (value === null || value === undefined) return '';
+        return value > 0 ? 'error-value' : '';
+    },
+
+    getAvailableClass(value) {
+        if (value === null || value === undefined) return '';
+        return value > 0 ? 'success-value' : '';
+    },
+
+    getUnavailableClass(value) {
+        if (value === null || value === undefined) return '';
+        return value > 0 ? 'error-value' : '';
+    },
+
+    attachEventHandlers() {
+        // Поиск по кнопке
+        const searchBtn = this.element.querySelector('#search-btn');
+        if (searchBtn) {
+            const newSearchBtn = searchBtn.cloneNode(true);
+            searchBtn.parentNode.replaceChild(newSearchBtn, searchBtn);
+
+            newSearchBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const input = this.element.querySelector('.search-input');
+                this.state.searchQuery = input.value;
+                this.applySearch();
+            });
+        }
+
+        // Сброс поиска
+        const clearBtn = this.element.querySelector('#clear-search');
+        if (clearBtn) {
+            const newClearBtn = clearBtn.cloneNode(true);
+            clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
+
+            newClearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const input = this.element.querySelector('.search-input');
+                input.value = '';
+                this.state.searchQuery = '';
+                this.applySearch();
+            });
+        }
+
+        // Поиск при нажатии Enter
+        const searchInput = this.element.querySelector('.search-input');
+        if (searchInput) {
+            const newSearchInput = searchInput.cloneNode(true);
+            searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+
+            newSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.state.searchQuery = e.target.value;
+                    this.applySearch();
+                }
+            });
+        }
+
+        // Изменение размера страницы
+        const pageSizeSelect = this.element.querySelector('#page-size');
+        if (pageSizeSelect) {
+            const newPageSizeSelect = pageSizeSelect.cloneNode(true);
+            pageSizeSelect.parentNode.replaceChild(newPageSizeSelect, pageSizeSelect);
+
+            newPageSizeSelect.addEventListener('change', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const newValue = parseInt(e.target.value);
+                this.state.pageSize = newValue;
+                this.state.currentPage = 1;
+                this.state.searchQuery = '';
+                const input = this.element.querySelector('.search-input');
+                if (input) input.value = '';
+                this.loadTasks();
+            });
+        }
     },
 
     renderPagination() {
@@ -204,10 +320,10 @@ export const ViewPlanTasks = {
 
         if (this.state.searchQuery) {
             container.innerHTML = `
-            <div class="pagination-info">
-                Найдено: ${this.state.filteredTasks.length} из ${this.state.totalTasks}
-            </div>
-        `;
+                <div class="pagination-info">
+                    Найдено: ${this.state.filteredTasks.length} из ${this.state.totalTasks}
+                </div>
+            `;
             return;
         }
 
@@ -220,14 +336,14 @@ export const ViewPlanTasks = {
         const end = Math.min(start + this.state.tasks.length - 1, this.state.totalTasks);
 
         let html = `
-        <div class="pagination-info">
-            Страница ${this.state.currentPage} из ${this.state.totalPages} | ${start}-${end} из ${this.state.totalTasks}
-        </div>
-        <div class="pagination-controls" id="pagination-controls">
-            <button type="button" class="btn btn-secondary btn-sm" id="prev-page" ${this.state.currentPage === 1 ? 'disabled' : ''}>
-                ←
-            </button>
-    `;
+            <div class="pagination-info">
+                Страница ${this.state.currentPage} из ${this.state.totalPages} | ${start}-${end} из ${this.state.totalTasks}
+            </div>
+            <div class="pagination-controls" id="pagination-controls">
+                <button type="button" class="btn btn-secondary btn-sm" id="prev-page" ${this.state.currentPage === 1 ? 'disabled' : ''}>
+                    ←
+                </button>
+        `;
 
         // Показываем первую, последнюю и страницы вокруг текущей
         const pagesToShow = new Set();
@@ -248,19 +364,19 @@ export const ViewPlanTasks = {
             }
 
             html += `
-            <button type="button" class="btn ${page === this.state.currentPage ? 'btn-primary' : 'btn-secondary'} btn-sm page-btn" 
-                    data-page="${page}">${page}</button>
-        `;
+                <button type="button" class="btn ${page === this.state.currentPage ? 'btn-primary' : 'btn-secondary'} btn-sm page-btn" 
+                        data-page="${page}">${page}</button>
+            `;
 
             lastPage = page;
         });
 
         html += `
-            <button type="button" class="btn btn-secondary btn-sm" id="next-page" ${this.state.currentPage === this.state.totalPages ? 'disabled' : ''}>
-                →
-            </button>
-        </div>
-    `;
+                <button type="button" class="btn btn-secondary btn-sm" id="next-page" ${this.state.currentPage === this.state.totalPages ? 'disabled' : ''}>
+                    →
+                </button>
+            </div>
+        `;
 
         container.innerHTML = html;
 
@@ -271,21 +387,17 @@ export const ViewPlanTasks = {
     attachPaginationEvents() {
         console.log('Вешаем обработчики на кнопки пагинации');
 
-        // Очищаем старые обработчики пагинации
-        this.clearEventListeners();
-
-        // Вешаем постоянные обработчики заново (они могли быть очищены)
-        this.attachStaticEvents();
-
         // Предыдущая страница
         const prevBtn = this.element.querySelector('#prev-page');
         if (prevBtn) {
-            this.addSafeEventListener(prevBtn, 'click', (e) => {
+            const newPrevBtn = prevBtn.cloneNode(true);
+            prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+
+            newPrevBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Клик по предыдущей, disabled:', prevBtn.disabled);
 
-                if (!prevBtn.disabled && this.state.currentPage > 1) {
+                if (!newPrevBtn.disabled && this.state.currentPage > 1) {
                     console.log('Переход на страницу:', this.state.currentPage - 1);
                     this.state.currentPage--;
                     this.state.searchQuery = '';
@@ -299,12 +411,14 @@ export const ViewPlanTasks = {
         // Следующая страница
         const nextBtn = this.element.querySelector('#next-page');
         if (nextBtn) {
-            this.addSafeEventListener(nextBtn, 'click', (e) => {
+            const newNextBtn = nextBtn.cloneNode(true);
+            nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+
+            newNextBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Клик по следующей, disabled:', nextBtn.disabled);
 
-                if (!nextBtn.disabled && this.state.currentPage < this.state.totalPages) {
+                if (!newNextBtn.disabled && this.state.currentPage < this.state.totalPages) {
                     console.log('Переход на страницу:', this.state.currentPage + 1);
                     this.state.currentPage++;
                     this.state.searchQuery = '';
@@ -320,11 +434,13 @@ export const ViewPlanTasks = {
         console.log('Найдено кнопок страниц:', pageBtns.length);
 
         pageBtns.forEach(btn => {
-            this.addSafeEventListener(btn, 'click', (e) => {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+
+            newBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const page = parseInt(btn.dataset.page);
-                console.log('Клик по странице:', page, 'текущая:', this.state.currentPage);
+                const page = parseInt(newBtn.dataset.page);
 
                 if (page && page !== this.state.currentPage) {
                     console.log('Переход на страницу:', page);
@@ -346,9 +462,9 @@ export const ViewPlanTasks = {
             this.state.filteredTasks = this.state.tasks.filter(task => {
                 return (
                     (task.id?.toString() || '').includes(query) ||
-                    (task.workstation_name || '').toLowerCase().includes(query) ||
+                    (task.workstation_id?.toString() || '').includes(query) ||
+                    (task.workstation_ip || '').includes(query) ||
                     (this.getStatusText(task.status) || '').toLowerCase().includes(query) ||
-                    (task.http || '').toLowerCase().includes(query) ||
                     (task.comment || '').toLowerCase().includes(query)
                 );
             });
@@ -358,25 +474,22 @@ export const ViewPlanTasks = {
         this.renderPagination();
     },
 
-    mapStatus(status) {
-        const map = {
-            0: 'pending',
-            1: 'in_progress',
-            2: 'completed',
-            3: 'failed'
-        };
-        return map[status] || 'unknown';
+    getStatusClass(status) {
+        if (status === 0) return 'awaiting';
+        if (status === 1) return 'in-progress';
+        if (status === 2) return 'completed';
+        if (status === -1) return 'failed';
+        return 'unknown';
     },
 
     getStatusText(status) {
         const map = {
-            'pending': 'Ожидает',
-            'in_progress': 'Выполняется',
-            'completed': 'Завершена',
-            'failed': 'Ошибка',
-            'unknown': 'Неизвестно'
+            0: 'Ожидает',
+            1: 'Выполняется',
+            2: 'Завершена',
+            '-1': 'Ошибка'
         };
-        return map[status] || status;
+        return map[status] || 'Неизвестно';
     },
 
     formatConfig(config) {
@@ -385,15 +498,12 @@ export const ViewPlanTasks = {
         const items = [];
         if (config.vpns?.length) items.push(`VPN: ${config.vpns.length}`);
         if (config.urls?.length) items.push(`URL: ${config.urls.length}`);
-        if (config.programs?.length) items.push(`Программы: ${config.programs.length}`);
+        if (config.programs?.length) items.push(`Приложения: ${config.programs.length}`);
 
         return items.join(' • ') || 'Нет конфигурации';
     },
 
     destroy() {
-        // Очищаем все обработчики событий
-        this.clearEventListeners();
-
         if (this.element) {
             this.element.remove();
             this.element = null;

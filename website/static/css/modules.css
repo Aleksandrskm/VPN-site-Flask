@@ -1114,11 +1114,13 @@
 }
 
 .tasks-table td.task-comment {
-    max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal; /* Разрешаем перенос строк */
+    word-break: break-word; /* Разрешаем перенос длинных слов */
+    min-width: 200px; /* Минимальная ширина */
+    max-width: 400px; /* Максимальная ширина, можно увеличить при необходимости */
     color: #6c757d;
+    line-height: 1.4; /* Улучшаем читаемость */
+    padding: 12px 16px; /* Оставляем отступы как в других ячейках */
 }
 
 .tasks-table td.task-config {
@@ -2357,4 +2359,145 @@
     border: 3px solid white;
     border-radius: 4px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+/* Стили для details и summary в модальном окне */
+.detail-section {
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background-color: #fafbfc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+}
+
+.detail-section summary {
+    padding: 16px 20px;
+    cursor: pointer;
+    list-style: none;
+    position: relative;
+    user-select: none;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.detail-section summary:hover {
+    background-color: #e9ecef;
+}
+
+.detail-section summary::-webkit-details-marker {
+    display: none; /* Скрываем стандартный маркер */
+}
+
+.detail-section summary::before {
+    content: '▶';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #007bff;
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.detail-section[open] summary::before {
+    transform: translateY(-50%) rotate(90deg);
+}
+
+.detail-section summary h4 {
+    margin: 0 0 0 20px;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-section .details-content {
+    padding: 20px;
+    background-color: white;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .detail-section {
+        margin-bottom: 15px;
+    }
+
+    .detail-section summary {
+        padding: 12px 16px;
+    }
+
+    .detail-section summary h4 {
+        font-size: 1rem;
+        margin-left: 18px;
+    }
+
+    .detail-section summary::before {
+        font-size: 12px;
+        left: 6px;
+    }
+
+    .detail-section .details-content {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-section {
+        margin-bottom: 12px;
+        border-radius: 6px;
+    }
+
+    .detail-section summary {
+        padding: 10px 14px;
+    }
+
+    .detail-section summary h4 {
+        font-size: 0.95rem;
+        margin-left: 16px;
+    }
+
+    .detail-section .details-content {
+        padding: 12px;
+    }
+}
+/* Строки с разными статусами для планируемых задач */
+.task-row.status-awaiting {
+    background-color: #fff3cd; /* Светло-желтый для ожидающих */
+}
+
+.task-row.status-in-progress {
+    background-color: #cce5ff; /* Светло-голубой для выполняющихся */
+}
+
+.task-row.status-completed {
+    background-color: #d4edda; /* Светло-зеленый для завершенных */
+}
+
+.task-row.status-failed {
+    background-color: #f8d7da; /* Светло-красный для ошибок */
+}
+
+.task-row.status-unknown {
+    background-color: #e2e3e5; /* Серый для неизвестных */
+}
+
+/* Стили для ячеек при наведении */
+.task-row.status-awaiting:hover {
+    background-color: #ffe69c;
+}
+
+.task-row.status-in-progress:hover {
+    background-color: #b8daff;
+}
+
+.task-row.status-completed:hover {
+    background-color: #c3e6cb;
+}
+
+.task-row.status-failed:hover {
+    background-color: #f5c6cb;
 }

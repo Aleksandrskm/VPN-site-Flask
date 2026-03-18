@@ -65,17 +65,17 @@ export const ResultTestsTable = {
         }
 
         const modal = document.createElement('div');
-        modal.className = 'modal-detail-overlay'; // Изменено с 'modal-overlay' на 'modal-detail-overlay'
+        modal.className = 'modal-detail-overlay';
         modal.id = 'task-detail-modal';
         modal.style.display = 'none';
 
         modal.innerHTML = `
-            <div class="modal-detail-content"> <!-- Изменено с 'modal-content' на 'modal-detail-content' -->
-                <div class="modal-detail-header"> <!-- Изменено с 'modal-header' на 'modal-detail-header' -->
+            <div class="modal-detail-content">
+                <div class="modal-detail-header">
                     <h3>Результаты задачи</h3>
-                    <button class="modal-detail-close">&times;</button> <!-- Изменено с 'modal-close' на 'modal-detail-close' -->
+                    <button class="modal-detail-close">&times;</button>
                 </div>
-                <div class="modal-detail-body" id="modal-body"> <!-- Изменено с 'modal-body' на 'modal-detail-body' -->
+                <div class="modal-detail-body" id="modal-body">
                     <div class="loading-state">Загрузка...</div>
                 </div>
             </div>
@@ -85,7 +85,7 @@ export const ResultTestsTable = {
         this.modalElement = modal;
 
         // Обработчик закрытия
-        const closeBtn = modal.querySelector('.modal-detail-close'); // Изменено с '.modal-close' на '.modal-detail-close'
+        const closeBtn = modal.querySelector('.modal-detail-close');
         closeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -331,88 +331,92 @@ export const ResultTestsTable = {
         let html = '<div class="task-detail-container">';
 
         // --- БЛОК 1: Результаты проверки приложений через VPN ---
-        html += '<div class="detail-section">';
-        html += '<h4>Результаты проверки приложений</h4>';
+        html += '<details class="detail-section" open>';
+        html += '<summary><h4>Результаты проверки приложений</h4></summary>';
+        html += '<div class="details-content">';
 
         if (hasVPNPrograms) {
             html += '<div class="results-grid">';
             detail.programs_results.forEach(item => {
                 const imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
                 html += `
-                <div class="result-card">
-                    <div class="result-info">
-                        <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
-                        <div><strong>Приложение:</strong> ${item.PRG || '-'}</div>
-                        <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
-                        ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
-                    </div>
-                    ${imageSrc ? `
-                        <div class="result-screenshot" data-src="${imageSrc}">
-                            <img src="${imageSrc}" alt="Скриншот" loading="lazy">
-                        </div>
-                    ` : ''}
+            <div class="result-card">
+                <div class="result-info">
+                    <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
+                    <div><strong>Приложение:</strong> ${item.PRG || '-'}</div>
+                    <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
+                    ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
                 </div>
-            `;
+                ${imageSrc ? `
+                    <div class="result-screenshot" data-src="${imageSrc}">
+                        <img src="${imageSrc}" alt="Скриншот" loading="lazy">
+                    </div>
+                ` : ''}
+            </div>
+        `;
             });
             html += '</div>';
         } else {
             html += '<div class="empty-section">Нет результатов по приложениям</div>';
         }
-        html += '</div>';
+        html += '</div></details>';
 
         // --- БЛОК 2: Результаты проверки сайтов через VPN ---
-        html += '<div class="detail-section">';
-        html += '<h4>Результаты проверки сайтов</h4>';
+        html += '<details class="detail-section" open>';
+        html += '<summary><h4>Результаты проверки сайтов</h4></summary>';
+        html += '<div class="details-content">';
 
         if (hasSites) {
             html += '<div class="results-grid">';
             detail.sites_results.forEach(item => {
                 const imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
                 html += `
-                <div class="result-card">
-                    <div class="result-info">
-                        <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
-                        <div><strong>Сайт:</strong> ${item.SITE || '-'}</div>
-                        <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
-                        ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
-                    </div>
-                    ${imageSrc ? `
-                        <div class="result-screenshot" data-src="${imageSrc}">
-                            <img src="${imageSrc}" alt="Скриншот" loading="lazy">
-                        </div>
-                    ` : ''}
+            <div class="result-card">
+                <div class="result-info">
+                    <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
+                    <div><strong>Сайт:</strong> ${item.SITE || '-'}</div>
+                    <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
+                    ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
                 </div>
-            `;
+                ${imageSrc ? `
+                    <div class="result-screenshot" data-src="${imageSrc}">
+                        <img src="${imageSrc}" alt="Скриншот" loading="lazy">
+                    </div>
+                ` : ''}
+            </div>
+        `;
             });
             html += '</div>';
         } else {
             html += '<div class="empty-section">Нет результатов по сайтам</div>';
         }
-        html += '</div>';
+        html += '</div></details>';
 
         // --- БЛОК 3: Ошибки VPN ---
-        html += '<div class="detail-section">';
-        html += '<h4>Ошибки VPN</h4>';
+        html += '<details class="detail-section" open>';
+        html += '<summary><h4>Ошибки VPN</h4></summary>';
+        html += '<div class="details-content">';
 
         if (hasUnconnectedVPNs) {
             html += '<div class="unconnected-items">';
             detail.unconnected_vpns.forEach(item => {
                 html += `
-                <div class="unconnected-item">
-                    <div><strong>VPN:</strong> ${item.VPN || item}</div>
-                    <div class="error-message">${item.ERR || 'Ошибка подключения'}</div>
-                </div>
-            `;
+            <div class="unconnected-item">
+                <div><strong>VPN:</strong> ${item.VPN || item}</div>
+                <div class="error-message">${item.ERR || 'Ошибка подключения'}</div>
+            </div>
+        `;
             });
             html += '</div>';
         } else {
             html += '<div class="empty-section">Нет ошибок VPN</div>';
         }
-        html += '</div>';
+        html += '</div></details>';
 
         // --- БЛОК 4: Ошибки приложений ---
-        html += '<div class="detail-section">';
-        html += '<h4>Ошибки приложений</h4>';
+        html += '<details class="detail-section" open>';
+        html += '<summary><h4>Ошибки приложений</h4></summary>';
+        html += '<div class="details-content">';
 
         if (hasUnconnectedPrograms) {
             html += '<div class="unconnected-items">';
@@ -420,21 +424,22 @@ export const ResultTestsTable = {
                 const name = typeof item === 'object' ? (item.PRG || '-') : item;
                 const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
                 html += `
-                <div class="unconnected-item">
-                    <div><strong>Приложение:</strong> ${name}</div>
-                    <div class="error-message">${error}</div>
-                </div>
-            `;
+            <div class="unconnected-item">
+                <div><strong>Приложение:</strong> ${name}</div>
+                <div class="error-message">${error}</div>
+            </div>
+        `;
             });
             html += '</div>';
         } else {
             html += '<div class="empty-section">Нет ошибок приложений</div>';
         }
-        html += '</div>';
+        html += '</div></details>';
 
         // --- БЛОК 5: Ошибки сайтов ---
-        html += '<div class="detail-section">';
-        html += '<h4>Ошибки сайтов</h4>';
+        html += '<details class="detail-section" open>';
+        html += '<summary><h4>Ошибки сайтов</h4></summary>';
+        html += '<div class="details-content">';
 
         if (hasUnconnectedSites) {
             html += '<div class="unconnected-items">';
@@ -442,25 +447,53 @@ export const ResultTestsTable = {
                 const name = typeof item === 'object' ? (item.SITE || '-') : item;
                 const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
                 html += `
-                <div class="unconnected-item">
-                    <div><strong>Сайт:</strong> ${name}</div>
-                    <div class="error-message">${error}</div>
-                </div>
-            `;
+            <div class="unconnected-item">
+                <div><strong>Сайт:</strong> ${name}</div>
+                <div class="error-message">${error}</div>
+            </div>
+        `;
             });
             html += '</div>';
         } else {
             html += '<div class="empty-section">Нет ошибок сайтов</div>';
         }
-        html += '</div>';
+        html += '</div></details>';
 
         html += '</div>'; // Закрываем .task-detail-container
         modalBody.innerHTML = html;
 
         // Добавляем обработчики для скриншотов
         this.attachScreenshotHandlers();
-    },
 
+        // Предотвращаем всплытие событий при клике на summary
+        this.preventSummaryBubbling();
+    },
+    preventSummaryBubbling() {
+        const summaries = this.modalElement.querySelectorAll('summary');
+
+        summaries.forEach(summary => {
+            // Удаляем старые обработчики, если есть
+            const newSummary = summary.cloneNode(true);
+            summary.parentNode.replaceChild(newSummary, summary);
+
+            newSummary.addEventListener('click', (e) => {
+                // Предотвращаем всплытие только если это не клик по вложенным элементам
+                // которые могут иметь свои обработчики
+                e.stopPropagation();
+
+                // Не вызываем preventDefault, чтобы сохранить стандартное поведение details
+                // Просто останавливаем всплытие, чтобы не закрывалось модальное окно
+            });
+
+            // Также останавливаем всплытие для всех вложенных элементов в summary
+            const summaryChildren = newSummary.querySelectorAll('*');
+            summaryChildren.forEach(child => {
+                child.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            });
+        });
+    },
     attachScreenshotHandlers() {
         const screenshotElements = this.modalElement.querySelectorAll('.result-screenshot');
 
@@ -471,16 +504,21 @@ export const ResultTestsTable = {
 
             newElement.addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
+                e.stopPropagation(); // Важно: останавливаем всплытие
 
                 const imageSrc = newElement.dataset.src;
                 if (imageSrc) {
                     this.openScreenshotInNewWindow(imageSrc);
                 }
+
+                return false;
             });
 
             // Добавляем стиль курсора
             newElement.style.cursor = 'pointer';
+
+            // Добавляем атрибут title для подсказки
+            newElement.title = 'Нажмите для увеличения';
         });
     },
 
@@ -498,17 +536,17 @@ export const ResultTestsTable = {
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>ID АРМ</th>
-                        <th>IP адрес</th>
-                        <th>Время запуска</th>
-                        <th>Время завершения</th>
-                        <th>Длительность</th>
+                        <th>Идентификатор АРМ</th>
+                        <th>IP-адрес АРМ</th>
+                        <th>Дата и время начала проверки</th>
+                        <th>Дата и время окончания проверки</th>
+                        <th>Время выполнения задачи</th>
                         <th>Статус</th>
                         <th colspan="3" class="section-header">VPN</th>
                         <th colspan="4" class="section-header">Сайты</th>
                         <th colspan="4" class="section-header">Приложения</th>
-                        <th>Комментарий</th>
-                        <th>Конфигурация</th>
+                        <th>Комментарий к проверке</th>
+                        <th>Конфигурация задачи</th>
                         <th>Детализация</th>
                     </tr>
                     <tr>
@@ -519,17 +557,17 @@ export const ResultTestsTable = {
                         <th></th>
                         <th></th>
                         <th></th>
-                        <th>Всего</th>
-                        <th>Подкл.</th>
-                        <th>Не подкл.</th>
-                        <th>Всего</th>
-                        <th>Провер.</th>
-                        <th>Доступ.</th>
-                        <th>Недоступ.</th>
-                        <th>Всего</th>
-                        <th>Провер.</th>
-                        <th>Доступ.</th>
-                        <th>Недоступ.</th>
+                        <th>Количество VPN из конфигурации</th>
+                        <th>Количество подключенных VPN</th>
+                        <th>Количество неподключенных VPN</th>
+                        <th>Количество сайтов из конфигурации</th>
+                        <th>Количество сайтов из отчета</th>
+                        <th>Количество доступных сайтов</th>
+                        <th>Количество недоступных сайтов</th>
+                        <th>Количество приложений из конфигурации</th>
+                        <th>Количество приложений из отчета</th>
+                        <th>Количество доступных приложений</th>
+                        <th>Количество недоступных приложений</th>
                         <th></th>
                         <th></th>
                         <th></th>
@@ -587,7 +625,7 @@ export const ResultTestsTable = {
         this.attachEventHandlers();
     },
 
-    // Вспомогательные методы для стилизации ячеек
+    // Вспомогательные методы для стилизации ячеек (возвращены оригинальные названия)
     getConnectedClass(value, total) {
         if (value === null || value === undefined) return '';
         return value === total ? 'success-value' : 'warning-value';
@@ -869,14 +907,12 @@ export const ResultTestsTable = {
 
     getStatusClass(status) {
         if (status === 2) return 'completed';
-        if (status === 1) return 'in-progress';
         if (status === -1) return 'failed';
         return 'unknown';
     },
 
     getStatusText(status) {
         const map = {
-            1: 'В процессе',
             2: 'Завершена',
             '-1': 'Ошибка'
         };
