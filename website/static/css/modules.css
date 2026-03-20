@@ -959,7 +959,7 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    height: 100%;
+    height: calc(100vh - 220px);
     display: flex;
     flex-direction: column;
 }
@@ -972,12 +972,14 @@
     flex-wrap: wrap;
     gap: 15px;
     flex-shrink: 0;
+    text-align: center;
 }
 
 .tasks-header h2 {
     color: #333;
     font-size: 1.5rem;
     margin: 0;
+    width: 80%;
 }
 
 .tasks-controls {
@@ -985,6 +987,7 @@
     gap: 15px;
     align-items: center;
     flex-wrap: wrap;
+    width: 15%;
 }
 
 .search-box {
@@ -2500,4 +2503,977 @@
 
 .task-row.status-failed:hover {
     background-color: #f5c6cb;
+}
+/* Стили для информации о задаче в модальном окне */
+.modal-detail-info {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.task-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+}
+
+.task-info-item {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.task-info-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 13px;
+    min-width: 130px;
+}
+
+.task-info-value {
+    color: #212529;
+    font-size: 13px;
+    word-break: break-word;
+}
+
+/* Стили для чекбокса показа скриншотов */
+.modal-detail-controls {
+    padding: 12px 20px;
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.screenshot-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #495057;
+    user-select: none;
+}
+
+.screenshot-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.screenshot-toggle span {
+    font-weight: 500;
+}
+
+/* Стили для таблиц результатов с границами */
+.results-table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    background: white;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: white;
+}
+
+.results-table th,
+.results-table td {
+    padding: 10px 12px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    vertical-align: top;
+}
+
+.results-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.results-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Стили для статуса доступности */
+.status-cell.status-available {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.status-cell.status-unavailable {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Стили для скриншотов - уменьшенные */
+.screenshot-cell {
+    text-align: center;
+    width: 120px;
+}
+
+.screenshot-img {
+    max-width: 100px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    object-fit: cover;
+}
+
+.screenshot-img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+/* Стили для таблицы ошибок */
+.errors-table .error-name {
+    font-weight: 500;
+
+}
+
+.errors-table .error-message-cell {
+    color: #dc3545;
+    word-break: break-word;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .task-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .task-info-item {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .task-info-label {
+        min-width: auto;
+    }
+
+    .screenshot-img {
+        max-width: 80px;
+        max-height: 60px;
+    }
+
+    .screenshot-cell {
+        width: 90px;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .screenshot-img {
+        max-width: 60px;
+        max-height: 50px;
+    }
+
+    .screenshot-cell {
+        width: 70px;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+}
+/* Добавьте в конец файла modules.css */
+
+/* ===== УЛУЧШЕННАЯ АДАПТИВНОСТЬ ДЛЯ ВСЕХ ЭКРАНОВ ===== */
+
+/* Общие стили для контейнеров */
+.view-tasks-section {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: calc(100vh - 220px);
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tasks-table-container {
+    flex: 1;
+    overflow: auto;
+    margin-bottom: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+    min-height: 200px;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+/* Фиксированная ширина для колонок на больших экранах */
+.tasks-table th,
+.tasks-table td {
+    padding: 10px 12px;
+}
+
+/* Адаптация для высоты экрана */
+@media (max-height: 800px) {
+    .view-tasks-section {
+        height: calc(100vh - 220px);
+        padding: 15px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .detail-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+        min-width: 80px;
+    }
+}
+
+@media (max-height: 700px) {
+    .view-tasks-section {
+        height: calc(100vh - 220px);
+        padding: 12px;
+    }
+
+    .tasks-header h2 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+
+    .pagination-container {
+        padding: 10px 5px;
+        margin-top: 10px;
+    }
+
+    .pagination-info {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .pagination-controls .btn {
+        min-width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+}
+
+@media (max-height: 600px) {
+    .view-tasks-section {
+        height: calc(100vh - 200px);
+        padding: 10px;
+    }
+
+    .tasks-header {
+        margin-bottom: 10px;
+    }
+
+    .tasks-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    .detail-btn {
+        padding: 3px 8px;
+        font-size: 10px;
+        min-width: 70px;
+    }
+}
+
+/* Адаптация для ширины экрана - горизонтальный скролл */
+@media (max-width: 1400px) {
+    .tasks-table {
+        min-width: 1300px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .tasks-table {
+        min-width: 1200px;
+    }
+}
+
+@media (max-width: 992px) {
+    .tasks-table {
+        min-width: 1100px;
+    }
+
+    .view-tasks-section {
+        height: calc(100vh - 220px);
+    }
+}
+
+/* Планшеты */
+@media (max-width: 768px) {
+    .view-tasks-section {
+        height: calc(100vh - 220px);
+        padding: 12px;
+    }
+
+    .tasks-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .tasks-header h2 {
+        width: 100%;
+        font-size: 1.2rem;
+    }
+
+    .tasks-controls {
+        width: 100%;
+    }
+
+    .page-size-select {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .tasks-table {
+        min-width: 1000px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .pagination-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .pagination-info {
+        text-align: center;
+        width: auto;
+    }
+
+    .pagination-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* Мобильные устройства */
+@media (max-width: 576px) {
+    .view-tasks-section {
+        height: calc(100vh - 220px);
+        padding: 10px;
+    }
+
+    .tasks-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .tasks-controls {
+        gap: 8px;
+    }
+
+    .page-size-select {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .tasks-table {
+        min-width: 900px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .detail-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 60px;
+    }
+
+    .pagination-controls .btn {
+        min-width: 28px;
+        height: 28px;
+        font-size: 11px;
+        padding: 0 6px;
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 480px) {
+    .view-tasks-section {
+        height: calc(100vh - 220px);
+        padding: 8px;
+    }
+
+    .tasks-header h2 {
+        font-size: 1rem;
+    }
+
+    .tasks-table {
+        min-width: 800px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 4px 6px;
+        font-size: 10px;
+    }
+
+    .task-comment {
+        max-width: 150px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .pagination-info {
+        font-size: 11px;
+    }
+
+    .pagination-controls .btn {
+        min-width: 26px;
+        height: 26px;
+        font-size: 10px;
+    }
+}
+
+/* ===== УЛУЧШЕННЫЕ СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ===== */
+.modal-detail-content {
+    background-color: white;
+    border-radius: 12px;
+    max-width: 1300px;
+    width: 95%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Адаптация модального окна по высоте */
+@media (max-height: 800px) {
+    .modal-detail-content {
+        max-height: 95vh;
+    }
+
+    .modal-detail-header {
+        padding: 12px 20px;
+    }
+
+    .modal-detail-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .modal-detail-info {
+        padding: 10px 20px;
+    }
+
+    .modal-detail-controls {
+        padding: 8px 20px;
+    }
+
+    .modal-detail-body {
+        padding: 15px;
+    }
+}
+
+@media (max-height: 600px) {
+    .modal-detail-header {
+        padding: 8px 16px;
+    }
+
+    .modal-detail-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .modal-detail-info {
+        padding: 8px 16px;
+    }
+
+    .modal-detail-controls {
+        padding: 6px 16px;
+    }
+
+    .modal-detail-body {
+        padding: 10px;
+    }
+
+    .detail-section {
+        margin-bottom: 10px;
+    }
+
+    .detail-section summary {
+        padding: 8px 12px;
+    }
+
+    .detail-section summary h4 {
+        font-size: 0.9rem;
+        margin-left: 16px;
+    }
+
+    .detail-section .details-content {
+        padding: 10px;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+}
+
+/* Адаптация модального окна по ширине */
+@media (max-width: 992px) {
+    .modal-detail-content {
+        width: 98%;
+        max-width: 95%;
+    }
+
+    .task-info-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 8px;
+    }
+
+    .task-info-item {
+        padding: 6px 10px;
+    }
+
+    .task-info-label {
+        min-width: 110px;
+        font-size: 12px;
+    }
+
+    .task-info-value {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-detail-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .modal-detail-header {
+        padding: 12px 16px;
+    }
+
+    .modal-detail-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .task-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .results-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .results-table {
+        min-width: 500px;
+    }
+
+    .screenshot-img {
+        max-width: 60px;
+        max-height: 50px;
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-detail-header {
+        padding: 10px 12px;
+    }
+
+    .modal-detail-header h3 {
+        font-size: 1rem;
+    }
+
+    .modal-detail-info {
+        padding: 8px 12px;
+    }
+
+    .modal-detail-controls {
+        padding: 6px 12px;
+    }
+
+    .modal-detail-body {
+        padding: 8px;
+    }
+
+    .detail-section summary {
+        padding: 8px 10px;
+    }
+
+    .detail-section summary h4 {
+        font-size: 0.85rem;
+        margin-left: 14px;
+    }
+
+    .detail-section .details-content {
+        padding: 8px;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 5px 6px;
+        font-size: 10px;
+    }
+
+    .screenshot-img {
+        max-width: 50px;
+        max-height: 40px;
+    }
+}
+
+/* ===== СТИЛИ ДЛЯ ТАБЛИЦЫ С ОШИБКАМИ В МОДАЛЬНОМ ОКНЕ ===== */
+.results-table.errors-table .error-message-cell {
+    color: #dc3545;
+    word-break: break-word;
+    max-width: 400px;
+}
+
+.results-table.errors-table .error-name {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Адаптация для таблицы ошибок */
+@media (max-width: 768px) {
+    .results-table.errors-table .error-name {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .results-table.errors-table .error-message-cell {
+        max-width: 250px;
+    }
+}
+
+/* ===== УЛУЧШЕНИЯ ДЛЯ СКРОЛЛА ===== */
+.tasks-table-container::-webkit-scrollbar,
+.modal-detail-body::-webkit-scrollbar,
+.results-table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.tasks-table-container::-webkit-scrollbar-track,
+.modal-detail-body::-webkit-scrollbar-track,
+.results-table-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.tasks-table-container::-webkit-scrollbar-thumb,
+.modal-detail-body::-webkit-scrollbar-thumb,
+.results-table-wrapper::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.tasks-table-container::-webkit-scrollbar-thumb:hover,
+.modal-detail-body::-webkit-scrollbar-thumb:hover,
+.results-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ===== ОБЩИЕ УЛУЧШЕНИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===== */
+@media (hover: none) and (pointer: coarse) {
+    .detail-btn,
+    .page-btn,
+    .screenshot-img {
+        min-height: 36px;
+    }
+
+    .detail-btn {
+        min-height: 32px;
+    }
+
+    .page-btn {
+        min-height: 32px;
+    }
+
+    .screenshot-img {
+        min-height: 50px;
+        min-width: 60px;
+    }
+}
+
+/* Фикс для очень высоких экранов */
+@media (min-height: 1000px) {
+    .view-tasks-section {
+        height: calc(100vh - 200px);
+    }
+
+    .tasks-table-container {
+        max-height: calc(100vh - 300px);
+    }
+}
+
+/* Фикс для альбомной ориентации на мобильных */
+@media (max-height: 500px) and (orientation: landscape) {
+    .view-tasks-section {
+        height: calc(100vh - 80px);
+    }
+
+    .tasks-header h2 {
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 4px 6px;
+        font-size: 10px;
+    }
+
+    .detail-btn {
+        padding: 2px 6px;
+        font-size: 9px;
+        min-width: 55px;
+    }
+
+    .modal-detail-content {
+        max-height: 98vh;
+    }
+
+    .detail-section summary {
+        padding: 5px 10px;
+    }
+
+    .detail-section summary h4 {
+        font-size: 0.8rem;
+    }
+}
+/* Добавьте в конец файла modules.css */
+
+/* ===== ЧЕРНЫЕ ГРАНИЦЫ ДЛЯ ТАБЛИЦЫ ЗАДАЧ ===== */
+
+.tasks-table-container {
+    flex: 1;
+    overflow: auto;
+    margin-bottom: 20px;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    background: white;
+    min-height: 200px;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.tasks-table th,
+.tasks-table td {
+    padding: 12px 16px;
+    border: 1px solid #000000 !important;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.tasks-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #000000 !important;
+}
+
+.tasks-table td {
+    border-bottom: 1px solid #000000 !important;
+}
+
+/* Для всех ячеек в таблице */
+.tasks-table tbody tr td {
+    border: 1px solid #000000 !important;
+}
+
+.tasks-table thead tr th {
+    border: 1px solid #000000 !important;
+}
+/* Добавьте в конец файла modules.css или замените существующие стили для tasks-header */
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.tasks-header h2 {
+    color: #333;
+    font-size: 1.5rem;
+    margin: 0;
+    flex: 1;
+    text-align: center;
+}
+
+.tasks-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+/* Адаптация для планшетов */
+@media (max-width: 992px) {
+    .tasks-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tasks-header h2 {
+        text-align: center;
+        width: 100%;
+    }
+
+    .tasks-controls {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+    .tasks-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .tasks-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .tasks-controls .page-size-select {
+        width: 100%;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .tasks-header h2 {
+        font-size: 1.2rem;
+    }
+}
+/* Добавьте в конец файла modules.css */
+
+/* ===== УВЕЛИЧЕННЫЕ КНОПКИ ПАГИНАЦИИ ===== */
+
+.pagination-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pagination-controls .btn {
+    min-width: 44px;
+    height: 44px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    border: 1px solid #dee2e6;
+}
+
+.pagination-controls .btn-sm {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#prev-page,
+#next-page {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Адаптация для планшетов */
+@media (max-width: 768px) {
+    .pagination-controls .btn {
+        min-width: 40px;
+        height: 40px;
+        font-size: 15px;
+    }
+
+    #prev-page,
+    #next-page {
+        font-size: 18px;
+    }
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 480px) {
+    .pagination-controls {
+        gap: 6px;
+    }
+
+    .pagination-controls .btn {
+        min-width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    #prev-page,
+    #next-page {
+        font-size: 16px;
+    }
+}
+
+/* Для touch-устройств увеличиваем область касания */
+@media (hover: none) and (pointer: coarse) {
+    .pagination-controls .btn {
+        min-width: 48px;
+        height: 48px;
+    }
 }

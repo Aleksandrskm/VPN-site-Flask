@@ -17,7 +17,8 @@ export const ResultTestsTable = {
         sortField: 'started_at',
         sortDirection: 'desc',
         taskDetail: null,
-        isDetailLoading: false
+        isDetailLoading: false,
+        showScreenshots: false
     },
 
     async create() {
@@ -47,18 +48,13 @@ export const ResultTestsTable = {
         `;
 
         this.element = section;
-
-        // Создаем модальное окно
         this.createModal();
-
-        // Загружаем данные
         await this.loadTasks();
 
         return section;
     },
 
     createModal() {
-        // Проверяем, не существует ли уже модальное окно
         if (document.getElementById('task-detail-modal')) {
             this.modalElement = document.getElementById('task-detail-modal');
             return;
@@ -75,6 +71,13 @@ export const ResultTestsTable = {
                     <h3>Результаты задачи</h3>
                     <button class="modal-detail-close">&times;</button>
                 </div>
+                <div class="modal-detail-info" id="modal-task-info"></div>
+                <div class="modal-detail-controls">
+                    <label class="screenshot-toggle">
+                        <input type="checkbox" id="show-screenshots-checkbox">
+                        <span>Показывать скриншоты</span>
+                    </label>
+                </div>
                 <div class="modal-detail-body" id="modal-body">
                     <div class="loading-state">Загрузка...</div>
                 </div>
@@ -84,7 +87,6 @@ export const ResultTestsTable = {
         document.body.appendChild(modal);
         this.modalElement = modal;
 
-        // Обработчик закрытия
         const closeBtn = modal.querySelector('.modal-detail-close');
         closeBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -92,12 +94,17 @@ export const ResultTestsTable = {
             this.closeModal();
         });
 
-        // Закрытие по клику на оверлей
         modal.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
             if (e.target === modal) {
                 this.closeModal();
+            }
+        });
+
+        const screenshotCheckbox = modal.querySelector('#show-screenshots-checkbox');
+        screenshotCheckbox.addEventListener('change', (e) => {
+            this.state.showScreenshots = e.target.checked;
+            if (this.state.taskDetail) {
+                this.renderTaskDetail();
             }
         });
     },
@@ -106,8 +113,11 @@ export const ResultTestsTable = {
         if (this.modalElement) {
             this.modalElement.style.display = 'none';
             this.state.taskDetail = null;
+            this.state.showScreenshots = false;
 
-            // Восстанавливаем обработчики на основной странице
+            const checkbox = this.modalElement.querySelector('#show-screenshots-checkbox');
+            if (checkbox) checkbox.checked = false;
+
             setTimeout(() => {
                 this.refreshEventHandlers();
             }, 100);
@@ -128,18 +138,9 @@ export const ResultTestsTable = {
     },
 
     refreshEventHandlers() {
-        console.log('Обновление обработчиков событий');
-
-        // Обновляем обработчики для таблицы
         this.attachDetailButtonListeners();
-
-        // Обновляем обработчики для поиска и пагинации
         this.attachEventHandlers();
-
-        // Обновляем обработчики для пагинации
         this.attachPaginationEvents();
-
-        // Обновляем значение select
         this.updatePageSizeSelect();
     },
 
@@ -148,45 +149,29 @@ export const ResultTestsTable = {
         tableContainer.innerHTML = '<div class="loading-state">Загрузка...</div>';
 
         try {
-            console.log('Загрузка страницы:', this.state.currentPage);
-
-            const response = await taskApi.getTasks(this.state.currentPage, this.state.pageSize,'completed');
-            console.log('Ответ:', response);
+            const response = await taskApi.getTasks(this.state.currentPage, this.state.pageSize, 'completed');
 
             if (response && response.tasks) {
                 this.state.tasks = response.tasks.map(task => ({
-                    // Основные поля
                     id: task.id,
-                    workstation_id: task.workstation_id || '-',
+                    workstation_id: task.workstation_id || '0',
                     workstation_ip: task.workstation_ip || '-',
                     started_at: task.started_at,
                     completed_at: task.completed_at,
                     duration_str: task.duration_str,
-
-                    // Статус задачи (1: Успешно, -1: Ошибка)
                     status: task.status,
-
-                    // Конфигурация
                     config: task.config ? JSON.parse(task.config) : null,
-
-                    // VPN статистика
                     vpn_total: task.vpn_total || 0,
                     vpn_connected: task.vpn_connected,
                     vpn_failed: task.vpn_failed,
-
-                    // Сайты статистика
                     sites_total: task.sites_total || 0,
                     sites_checked: task.sites_checked,
                     sites_available: task.sites_available,
                     sites_unavailable: task.sites_unavailable,
-
-                    // Приложения статистика
                     programs_total: task.programs_total || 0,
                     programs_checked: task.programs_checked,
                     programs_available: task.programs_available,
                     programs_unavailable: task.programs_unavailable,
-
-                    // Комментарий
                     comment: task.comment || '-'
                 }));
 
@@ -205,21 +190,26 @@ export const ResultTestsTable = {
         }
     },
 
-    async loadTaskDetail(taskId) {
-        console.log('loadTaskDetail вызван с ID:', taskId);
-
+    async loadTaskDetail(taskId, taskRowData = null) {
         this.state.isDetailLoading = true;
         this.state.taskDetail = null;
+        this.currentTaskRowData = taskRowData;
 
         const modalBody = this.modalElement.querySelector('#modal-body');
+        const modalInfo = this.modalElement.querySelector('#modal-task-info');
+
         modalBody.innerHTML = '<div class="loading-state">Загрузка...</div>';
+
+        if (taskRowData) {
+            modalInfo.innerHTML = this.renderTaskInfo(taskRowData);
+        } else {
+            modalInfo.innerHTML = '';
+        }
+
         this.openModal();
 
         try {
-            console.log('Загрузка деталей задачи:', taskId);
             const detail = await taskApi.getTaskDetail(taskId);
-            console.log('Детали задачи получены:', detail);
-
             this.state.taskDetail = detail;
             this.renderTaskDetail();
         } catch (error) {
@@ -230,9 +220,38 @@ export const ResultTestsTable = {
         }
     },
 
-    // Метод для открытия скриншота в новом окне
+    renderTaskInfo(taskRowData) {
+        return `
+            <div class="task-info-grid">
+                <div class="task-info-item">
+                    <span class="task-info-label">ID задачи:</span>
+                    <span class="task-info-value">${taskRowData.id || '-'}</span>
+                </div>
+                <div class="task-info-item">
+                    <span class="task-info-label">Рабочее место:</span>
+                    <span class="task-info-value">${taskRowData.workstation_id || '0'}</span>
+                </div>
+                <div class="task-info-item">
+                    <span class="task-info-label">IP-адрес:</span>
+                    <span class="task-info-value">${taskRowData.workstation_ip || '0'}</span>
+                </div>
+                <div class="task-info-item">
+                    <span class="task-info-label">Дата и время начала:</span>
+                    <span class="task-info-value">${taskRowData.started_at ? DateUtils.getDateTime(new Date(taskRowData.started_at)) : '-'}</span>
+                </div>
+                <div class="task-info-item">
+                    <span class="task-info-label">Дата и время окончания:</span>
+                    <span class="task-info-value">${taskRowData.completed_at ? DateUtils.getDateTime(new Date(taskRowData.completed_at)) : '-'}</span>
+                </div>
+                <div class="task-info-item">
+                    <span class="task-info-label">Конфигурация:</span>
+                    <span class="task-info-value">${this.formatConfig(taskRowData.config)}</span>
+                </div>
+            </div>
+        `;
+    },
+
     openScreenshotInNewWindow(imageSrc) {
-        // Открываем в новом окне
         const newWindow = window.open('', '_blank');
 
         if (newWindow) {
@@ -276,7 +295,6 @@ export const ResultTestsTable = {
                             cursor: pointer;
                             font-size: 14px;
                             z-index: 1000;
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
                         }
                         .close-btn:hover {
                             background: #0056b3;
@@ -306,7 +324,6 @@ export const ResultTestsTable = {
             `);
             newWindow.document.close();
         } else {
-            // Если блокировщик всплывающих окон, открываем в текущем окне
             window.open(imageSrc, '_blank');
         }
     },
@@ -320,205 +337,240 @@ export const ResultTestsTable = {
             return;
         }
 
-        // --- Проверяем наличие данных для каждого блока ---
-        const hasVPNPrograms = detail.programs_results && detail.programs_results.length > 0;
-        const hasSites = detail.sites_results && detail.sites_results.length > 0;
-
-        const hasUnconnectedVPNs = detail.unconnected_vpns && detail.unconnected_vpns.length > 0;
-        const hasUnconnectedPrograms = detail.unconnected_programs && detail.unconnected_programs.length > 0;
-        const hasUnconnectedSites = detail.unconnected_sites && detail.unconnected_sites.length > 0;
-
         let html = '<div class="task-detail-container">';
 
-        // --- БЛОК 1: Результаты проверки приложений через VPN ---
+        // Результаты проверки приложений
         html += '<details class="detail-section" open>';
         html += '<summary><h4>Результаты проверки приложений</h4></summary>';
         html += '<div class="details-content">';
-
-        if (hasVPNPrograms) {
-            html += '<div class="results-grid">';
-            detail.programs_results.forEach(item => {
-                const imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
-                html += `
-            <div class="result-card">
-                <div class="result-info">
-                    <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
-                    <div><strong>Приложение:</strong> ${item.PRG || '-'}</div>
-                    <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
-                    ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
-                </div>
-                ${imageSrc ? `
-                    <div class="result-screenshot" data-src="${imageSrc}">
-                        <img src="${imageSrc}" alt="Скриншот" loading="lazy">
-                    </div>
-                ` : ''}
-            </div>
-        `;
-            });
-            html += '</div>';
-        } else {
-            html += '<div class="empty-section">Нет результатов по приложениям</div>';
-        }
+        html += this.renderResultsTable(detail.programs_results || [], 'program');
         html += '</div></details>';
 
-        // --- БЛОК 2: Результаты проверки сайтов через VPN ---
+        // Результаты проверки сайтов
         html += '<details class="detail-section" open>';
         html += '<summary><h4>Результаты проверки сайтов</h4></summary>';
         html += '<div class="details-content">';
-
-        if (hasSites) {
-            html += '<div class="results-grid">';
-            detail.sites_results.forEach(item => {
-                const imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
-                html += `
-            <div class="result-card">
-                <div class="result-info">
-                    <div class="vpn-name"><strong>VPN:</strong> ${item.VPN || '-'}</div>
-                    <div><strong>Сайт:</strong> ${item.SITE || '-'}</div>
-                    <div><strong>Доступ:</strong> ${item.DOSTUP === 1 ? 'Доступен' : 'Недоступен'}</div>
-                    ${item.DOSTUP_T ? `<div><strong>Время:</strong> ${item.DOSTUP_T}</div>` : ''}
-                </div>
-                ${imageSrc ? `
-                    <div class="result-screenshot" data-src="${imageSrc}">
-                        <img src="${imageSrc}" alt="Скриншот" loading="lazy">
-                    </div>
-                ` : ''}
-            </div>
-        `;
-            });
-            html += '</div>';
-        } else {
-            html += '<div class="empty-section">Нет результатов по сайтам</div>';
-        }
+        html += this.renderResultsTable(detail.sites_results || [], 'site');
         html += '</div></details>';
 
-        // --- БЛОК 3: Ошибки VPN ---
+        // Ошибки VPN
         html += '<details class="detail-section" open>';
         html += '<summary><h4>Ошибки VPN</h4></summary>';
         html += '<div class="details-content">';
-
-        if (hasUnconnectedVPNs) {
-            html += '<div class="unconnected-items">';
-            detail.unconnected_vpns.forEach(item => {
-                html += `
-            <div class="unconnected-item">
-                <div><strong>VPN:</strong> ${item.VPN || item}</div>
-                <div class="error-message">${item.ERR || 'Ошибка подключения'}</div>
-            </div>
-        `;
-            });
-            html += '</div>';
-        } else {
-            html += '<div class="empty-section">Нет ошибок VPN</div>';
-        }
+        html += this.renderErrorsTable(detail.unconnected_vpns || [], 'vpn');
         html += '</div></details>';
 
-        // --- БЛОК 4: Ошибки приложений ---
+        // Ошибки приложений
         html += '<details class="detail-section" open>';
         html += '<summary><h4>Ошибки приложений</h4></summary>';
         html += '<div class="details-content">';
-
-        if (hasUnconnectedPrograms) {
-            html += '<div class="unconnected-items">';
-            detail.unconnected_programs.forEach(item => {
-                const name = typeof item === 'object' ? (item.PRG || '-') : item;
-                const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
-                html += `
-            <div class="unconnected-item">
-                <div><strong>Приложение:</strong> ${name}</div>
-                <div class="error-message">${error}</div>
-            </div>
-        `;
-            });
-            html += '</div>';
-        } else {
-            html += '<div class="empty-section">Нет ошибок приложений</div>';
-        }
+        html += this.renderErrorsTable(detail.unconnected_programs || [], 'program');
         html += '</div></details>';
 
-        // --- БЛОК 5: Ошибки сайтов ---
+        // Ошибки сайтов
         html += '<details class="detail-section" open>';
         html += '<summary><h4>Ошибки сайтов</h4></summary>';
         html += '<div class="details-content">';
-
-        if (hasUnconnectedSites) {
-            html += '<div class="unconnected-items">';
-            detail.unconnected_sites.forEach(item => {
-                const name = typeof item === 'object' ? (item.SITE || '-') : item;
-                const error = typeof item === 'object' ? (item.ERR || 'Ошибка подключения') : 'Ошибка подключения';
-                html += `
-            <div class="unconnected-item">
-                <div><strong>Сайт:</strong> ${name}</div>
-                <div class="error-message">${error}</div>
-            </div>
-        `;
-            });
-            html += '</div>';
-        } else {
-            html += '<div class="empty-section">Нет ошибок сайтов</div>';
-        }
+        html += this.renderErrorsTable(detail.unconnected_sites || [], 'site');
         html += '</div></details>';
 
-        html += '</div>'; // Закрываем .task-detail-container
+        html += '</div>';
         modalBody.innerHTML = html;
 
-        // Добавляем обработчики для скриншотов
-        this.attachScreenshotHandlers();
-
-        // Предотвращаем всплытие событий при клике на summary
+        if (this.state.showScreenshots) {
+            this.attachScreenshotHandlers();
+        }
         this.preventSummaryBubbling();
     },
+
+    renderResultsTable(items, type) {
+        const showScreenshots = this.state.showScreenshots;
+
+        // Если нет данных, показываем пустую таблицу с заголовками
+        if (!items || items.length === 0) {
+            return `
+                <div class="results-table-wrapper">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>VPN</th>
+                                <th>${type === 'program' ? 'Приложение' : 'Сайт'}</th>
+                                <th>Доступ</th>
+                                <th>Текст доступности</th>
+                                ${showScreenshots ? '<th>Скриншот</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="${showScreenshots ? 5 : 4}" class="empty-table-row">Нет данных</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        let html = `
+            <div class="results-table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>VPN</th>
+                            <th>${type === 'program' ? 'Приложение' : 'Сайт'}</th>
+                            <th>Доступ</th>
+                            <th>Текст доступности</th>
+                            ${showScreenshots ? '<th>Скриншот</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        items.forEach(item => {
+            const imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
+            const dostupClass = item.DOSTUP === 1 ? 'status-available' : 'status-unavailable';
+            const dostupText = item.DOSTUP === 1 ? 'Доступен' : 'Недоступен';
+            const dostupTText = item.DOSTUP_T || '-';
+
+            html += `
+                <tr>
+                    <td class="vpn-cell">${item.VPN || '-'}</td>
+                    <td class="target-cell">${type === 'program' ? (item.PRG || '-') : (item.SITE || '-')}</td>
+                    <td class="status-cell ${dostupClass}">${dostupText}</td>
+                    <td class="dostup-t-cell">${dostupTText}</td>
+            `;
+
+            if (showScreenshots) {
+                if (imageSrc) {
+                    html += `
+                        <td class="screenshot-cell">
+                            <img src="${imageSrc}" class="screenshot-img" data-src="${imageSrc}" alt="Скриншот" loading="lazy">
+                        </td>
+                    `;
+                } else {
+                    html += `<td class="screenshot-cell">—</td>`;
+                }
+            }
+
+            html += `</tr>`;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        return html;
+    },
+
+    renderErrorsTable(items, type) {
+        // Если нет данных, показываем пустую таблицу с заголовками
+        if (!items || items.length === 0) {
+            return `
+                <div class="results-table-wrapper">
+                    <table class="results-table errors-table">
+                        <thead>
+                            <tr>
+                                <th>${type === 'vpn' ? 'VPN' : (type === 'program' ? 'Приложение' : 'Сайт')}</th>
+                                <th>Ошибка</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2" class="empty-table-row">Нет данных</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        let html = `
+            <div class="results-table-wrapper">
+                <table class="results-table errors-table">
+                    <thead>
+                        <tr>
+                            <th>${type === 'vpn' ? 'VPN' : (type === 'program' ? 'Приложение' : 'Сайт')}</th>
+                            <th>Ошибка</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        items.forEach(item => {
+            let name = '-';
+            let error = 'Ошибка подключения';
+
+            if (typeof item === 'object') {
+                if (type === 'vpn') {
+                    name = item.VPN || '-';
+                    error = item.ERR || 'Ошибка подключения';
+                } else if (type === 'program') {
+                    name = item.PRG || '-';
+                    error = item.ERR || 'Ошибка подключения';
+                } else if (type === 'site') {
+                    name = item.SITE || '-';
+                    error = item.ERR || 'Ошибка подключения';
+                }
+            } else {
+                name = item;
+            }
+
+            html += `
+                <tr>
+                    <td class="error-name">${name}</td>
+                    <td class="error-message-cell">${error}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        return html;
+    },
+
+    attachScreenshotHandlers() {
+        const screenshots = this.modalElement.querySelectorAll('.screenshot-img');
+
+        screenshots.forEach(img => {
+            const newImg = img.cloneNode(true);
+            img.parentNode.replaceChild(newImg, img);
+
+            newImg.style.cursor = 'pointer';
+            newImg.title = 'Нажмите для увеличения';
+
+            newImg.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const imageSrc = newImg.dataset.src;
+                if (imageSrc) {
+                    this.openScreenshotInNewWindow(imageSrc);
+                }
+            });
+        });
+    },
+
     preventSummaryBubbling() {
         const summaries = this.modalElement.querySelectorAll('summary');
 
         summaries.forEach(summary => {
-            // Удаляем старые обработчики, если есть
             const newSummary = summary.cloneNode(true);
             summary.parentNode.replaceChild(newSummary, summary);
 
             newSummary.addEventListener('click', (e) => {
-                // Предотвращаем всплытие только если это не клик по вложенным элементам
-                // которые могут иметь свои обработчики
                 e.stopPropagation();
-
-                // Не вызываем preventDefault, чтобы сохранить стандартное поведение details
-                // Просто останавливаем всплытие, чтобы не закрывалось модальное окно
             });
 
-            // Также останавливаем всплытие для всех вложенных элементов в summary
             const summaryChildren = newSummary.querySelectorAll('*');
             summaryChildren.forEach(child => {
                 child.addEventListener('click', (e) => {
                     e.stopPropagation();
                 });
             });
-        });
-    },
-    attachScreenshotHandlers() {
-        const screenshotElements = this.modalElement.querySelectorAll('.result-screenshot');
-
-        screenshotElements.forEach(element => {
-            // Удаляем старые обработчики, если есть
-            const newElement = element.cloneNode(true);
-            element.parentNode.replaceChild(newElement, element);
-
-            newElement.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation(); // Важно: останавливаем всплытие
-
-                const imageSrc = newElement.dataset.src;
-                if (imageSrc) {
-                    this.openScreenshotInNewWindow(imageSrc);
-                }
-
-                return false;
-            });
-
-            // Добавляем стиль курсора
-            newElement.style.cursor = 'pointer';
-
-            // Добавляем атрибут title для подсказки
-            newElement.title = 'Нажмите для увеличения';
         });
     },
 
@@ -536,8 +588,8 @@ export const ResultTestsTable = {
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Идентификатор АРМ</th>
-                        <th>IP-адрес АРМ</th>
+                        <th>Рабочее место</th>
+                        <th>IP-адрес</th>
                         <th>Дата и время начала проверки</th>
                         <th>Дата и время окончания проверки</th>
                         <th>Время выполнения задачи</th>
@@ -579,7 +631,7 @@ export const ResultTestsTable = {
         displayTasks.forEach(task => {
             html += `
                 <tr class="task-row status-${this.getStatusClass(task.status)}">
-                    <td class="task-id">#${task.id || '-'}</td>
+                    <td class="task-id">${task.id || '0'}</td>
                     <td class="task-workstation-id">${task.workstation_id}</td>
                     <td class="task-workstation-ip">${task.workstation_ip}</td>
                     <td class="task-time">${task.started_at ? DateUtils.getDateTime(new Date(task.started_at)) : '-'}</td>
@@ -587,18 +639,15 @@ export const ResultTestsTable = {
                     <td class="task-duration">${task.duration_str || '-'}</td>
                     <td class="task-status">${this.getStatusText(task.status)}</td>
                     
-                    <!-- VPN статистика -->
                     <td class="task-stats">${task.vpn_total}</td>
                     <td class="task-stats ${this.getConnectedClass(task.vpn_connected, task.vpn_total)}">${task.vpn_connected ?? '-'}</td>
                     <td class="task-stats ${this.getFailedClass(task.vpn_failed)}">${task.vpn_failed ?? '-'}</td>
                     
-                    <!-- Сайты статистика -->
                     <td class="task-stats">${task.sites_total}</td>
                     <td class="task-stats">${task.sites_checked ?? '-'}</td>
                     <td class="task-stats ${this.getAvailableClass(task.sites_available)}">${task.sites_available ?? '-'}</td>
                     <td class="task-stats ${this.getUnavailableClass(task.sites_unavailable)}">${task.sites_unavailable ?? '-'}</td>
                     
-                    <!-- Приложения статистика -->
                     <td class="task-stats">${task.programs_total}</td>
                     <td class="task-stats">${task.programs_checked ?? '-'}</td>
                     <td class="task-stats ${this.getAvailableClass(task.programs_available)}">${task.programs_available ?? '-'}</td>
@@ -607,7 +656,7 @@ export const ResultTestsTable = {
                     <td class="task-comment">${task.comment}</td>
                     <td class="task-config">${this.formatConfig(task.config)}</td>
                     <td class="task-actions">
-                        <button class="btn btn-primary btn-sm detail-btn" data-task-id="${task.id}">
+                        <button class="btn btn-primary btn-sm detail-btn" data-task-id="${task.id}" data-task-data='${JSON.stringify(task)}'>
                             Детализация
                         </button>
                     </td>
@@ -617,15 +666,10 @@ export const ResultTestsTable = {
 
         html += '</tbody></table>';
         container.innerHTML = html;
-
-        // Добавляем обработчики для кнопок детализации
         this.attachDetailButtonListeners();
-
-        // Добавляем обработчики для поиска и пагинации
         this.attachEventHandlers();
     },
 
-    // Вспомогательные методы для стилизации ячеек (возвращены оригинальные названия)
     getConnectedClass(value, total) {
         if (value === null || value === undefined) return '';
         return value === total ? 'success-value' : 'warning-value';
@@ -648,29 +692,30 @@ export const ResultTestsTable = {
 
     attachDetailButtonListeners() {
         const detailBtns = this.element.querySelectorAll('.detail-btn');
-        console.log('Добавляем обработчики для кнопок детализации:', detailBtns.length);
-
-        // Сохраняем ссылку на this для использования в обработчике
         const self = this;
 
         detailBtns.forEach(btn => {
-            // Убираем все предыдущие обработчики
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
 
-            // Добавляем новый обработчик
             newBtn.addEventListener('click', function(event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
 
                 const taskId = parseInt(this.dataset.taskId);
-                console.log('Клик по кнопке детализации, ID задачи:', taskId);
+                let taskData = null;
+
+                try {
+                    if (this.dataset.taskData) {
+                        taskData = JSON.parse(this.dataset.taskData);
+                    }
+                } catch (e) {
+                    console.error('Ошибка парсинга данных задачи:', e);
+                }
 
                 if (taskId && !isNaN(taskId)) {
-                    self.loadTaskDetail(taskId);
-                } else {
-                    console.error('Неверный ID задачи:', this.dataset.taskId);
+                    self.loadTaskDetail(taskId, taskData);
                 }
 
                 return false;
@@ -679,12 +724,10 @@ export const ResultTestsTable = {
     },
 
     attachEventHandlers() {
-        // Поиск по кнопке
         const searchBtn = this.element.querySelector('#search-btn');
         if (searchBtn) {
             const newSearchBtn = searchBtn.cloneNode(true);
             searchBtn.parentNode.replaceChild(newSearchBtn, searchBtn);
-
             newSearchBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -694,12 +737,10 @@ export const ResultTestsTable = {
             });
         }
 
-        // Сброс поиска
         const clearBtn = this.element.querySelector('#clear-search');
         if (clearBtn) {
             const newClearBtn = clearBtn.cloneNode(true);
             clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
-
             newClearBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -710,12 +751,10 @@ export const ResultTestsTable = {
             });
         }
 
-        // Поиск при нажатии Enter
         const searchInput = this.element.querySelector('.search-input');
         if (searchInput) {
             const newSearchInput = searchInput.cloneNode(true);
             searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-
             newSearchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -726,12 +765,10 @@ export const ResultTestsTable = {
             });
         }
 
-        // Изменение размера страницы
         const pageSizeSelect = this.element.querySelector('#page-size');
         if (pageSizeSelect) {
             const newPageSizeSelect = pageSizeSelect.cloneNode(true);
             pageSizeSelect.parentNode.replaceChild(newPageSizeSelect, pageSizeSelect);
-
             newPageSizeSelect.addEventListener('change', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -768,15 +805,12 @@ export const ResultTestsTable = {
 
         let html = `
             <div class="pagination-info">
-                Страница ${this.state.currentPage} из ${this.state.totalPages} | ${start}-${end} из ${this.state.totalTasks}
+                Страница ${this.state.currentPage} из ${this.state.totalPages} | Задачи: ${start}-${end} из ${this.state.totalTasks}
             </div>
-            <div class="pagination-controls" id="pagination-controls">
-                <button type="button" class="btn btn-secondary btn-sm" id="prev-page" ${this.state.currentPage === 1 ? 'disabled' : ''}>
-                    ←
-                </button>
+            <div class="pagination-controls">
+                <button type="button" class="btn btn-secondary btn-sm" id="prev-page" ${this.state.currentPage === 1 ? 'disabled' : ''}>←</button>
         `;
 
-        // Показываем первую, последнюю и страницы вокруг текущей
         const pagesToShow = new Set();
         pagesToShow.add(1);
         pagesToShow.add(this.state.totalPages);
@@ -793,43 +827,25 @@ export const ResultTestsTable = {
             if (page - lastPage > 1) {
                 html += `<span class="pagination-dots">...</span>`;
             }
-
-            html += `
-                <button type="button" class="btn ${page === this.state.currentPage ? 'btn-primary' : 'btn-secondary'} btn-sm page-btn" 
-                        data-page="${page}">${page}</button>
-            `;
-
+            html += `<button type="button" class="btn ${page === this.state.currentPage ? 'btn-primary' : 'btn-secondary'} btn-sm page-btn" data-page="${page}">${page}</button>`;
             lastPage = page;
         });
 
-        html += `
-                <button type="button" class="btn btn-secondary btn-sm" id="next-page" ${this.state.currentPage === this.state.totalPages ? 'disabled' : ''}>
-                    →
-                </button>
-            </div>
-        `;
+        html += `<button type="button" class="btn btn-secondary btn-sm" id="next-page" ${this.state.currentPage === this.state.totalPages ? 'disabled' : ''}>→</button></div>`;
 
         container.innerHTML = html;
-
-        // Вешаем обработчики на кнопки пагинации
         this.attachPaginationEvents();
     },
 
     attachPaginationEvents() {
-        console.log('Вешаем обработчики на кнопки пагинации');
-
-        // Предыдущая страница
         const prevBtn = this.element.querySelector('#prev-page');
         if (prevBtn) {
             const newPrevBtn = prevBtn.cloneNode(true);
             prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
-
             newPrevBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-
                 if (!newPrevBtn.disabled && this.state.currentPage > 1) {
-                    console.log('Переход на страницу:', this.state.currentPage - 1);
                     this.state.currentPage--;
                     this.state.searchQuery = '';
                     const input = this.element.querySelector('.search-input');
@@ -839,18 +855,14 @@ export const ResultTestsTable = {
             });
         }
 
-        // Следующая страница
         const nextBtn = this.element.querySelector('#next-page');
         if (nextBtn) {
             const newNextBtn = nextBtn.cloneNode(true);
             nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-
             newNextBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-
                 if (!newNextBtn.disabled && this.state.currentPage < this.state.totalPages) {
-                    console.log('Переход на страницу:', this.state.currentPage + 1);
                     this.state.currentPage++;
                     this.state.searchQuery = '';
                     const input = this.element.querySelector('.search-input');
@@ -860,21 +872,15 @@ export const ResultTestsTable = {
             });
         }
 
-        // Кнопки страниц
         const pageBtns = this.element.querySelectorAll('.page-btn');
-        console.log('Найдено кнопок страниц:', pageBtns.length);
-
         pageBtns.forEach(btn => {
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
-
             newBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 const page = parseInt(newBtn.dataset.page);
-
                 if (page && page !== this.state.currentPage) {
-                    console.log('Переход на страницу:', page);
                     this.state.currentPage = page;
                     this.state.searchQuery = '';
                     const input = this.element.querySelector('.search-input');
@@ -900,7 +906,6 @@ export const ResultTestsTable = {
                 );
             });
         }
-
         this.renderTable();
         this.renderPagination();
     },
@@ -912,21 +917,16 @@ export const ResultTestsTable = {
     },
 
     getStatusText(status) {
-        const map = {
-            2: 'Завершена',
-            '-1': 'Ошибка'
-        };
+        const map = { 2: 'Завершена', '-1': 'Ошибка' };
         return map[status] || 'Неизвестно';
     },
 
     formatConfig(config) {
         if (!config) return 'Нет конфигурации';
-
         const items = [];
         if (config.vpns?.length) items.push(`VPN: ${config.vpns.length}`);
         if (config.urls?.length) items.push(`URL: ${config.urls.length}`);
         if (config.programs?.length) items.push(`Приложения: ${config.programs.length}`);
-
         return items.join(' • ') || 'Нет конфигурации';
     },
 
@@ -935,7 +935,6 @@ export const ResultTestsTable = {
             this.modalElement.remove();
             this.modalElement = null;
         }
-
         if (this.element) {
             this.element.remove();
             this.element = null;
