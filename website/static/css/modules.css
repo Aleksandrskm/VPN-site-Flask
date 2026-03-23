@@ -4,7 +4,7 @@
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
-    height: 70vh;
+    height: calc(90vh - 140px);
     overflow: auto;
 }
 
@@ -623,7 +623,7 @@
         position: static;
         top: auto;
         max-height: none;
-        height: auto;
+        height: 200px;
     }
 
     .right-column {
@@ -705,6 +705,7 @@
     .table-view {
         padding: 12px;
         min-height: 350px;
+        overflow: auto;
     }
 
     .form-task {
@@ -851,7 +852,7 @@
 
     .table-section {
         max-height: calc(55vh - 140px);
-        min-height: 150px;
+        min-height: 250px;
     }
 
     .table-view {
@@ -2509,6 +2510,8 @@
     padding: 15px 20px;
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
+    overflow: auto;
+    max-height: 150px;
 }
 
 .task-info-grid {
@@ -2942,6 +2945,7 @@
     .view-tasks-section {
         height: calc(100vh - 220px);
         padding: 8px;
+        overflow: auto;
     }
 
     .tasks-header h2 {
@@ -2955,7 +2959,7 @@
     .tasks-table th,
     .tasks-table td {
         padding: 4px 6px;
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .task-comment {
@@ -2965,7 +2969,7 @@
     }
 
     .pagination-info {
-        font-size: 11px;
+        font-size: 13px;
     }
 
     .pagination-controls .btn {
@@ -3157,7 +3161,7 @@
     .results-table th,
     .results-table td {
         padding: 5px 6px;
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .screenshot-img {
@@ -3243,7 +3247,7 @@
 /* Фикс для очень высоких экранов */
 @media (min-height: 1000px) {
     .view-tasks-section {
-        height: calc(100vh - 200px);
+        height: calc(100vh - 220px);
     }
 
     .tasks-table-container {
