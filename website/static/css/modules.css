@@ -2510,14 +2510,16 @@
     padding: 15px 20px;
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
-    overflow: auto;
-    max-height: 150px;
+
+
 }
 
 .task-info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 10px;
+    max-height: 150px;
+    overflow: auto;
 }
 
 .task-info-item {
