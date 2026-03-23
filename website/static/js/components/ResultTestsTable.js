@@ -155,7 +155,7 @@ export const ResultTestsTable = {
                 this.state.tasks = response.tasks.map(task => ({
                     id: task.id,
                     workstation_id: task.workstation_id || '0',
-                    workstation_ip: task.workstation_ip || '-',
+                    workstation_ip: task.workstation_ip || '',
                     started_at: task.started_at,
                     completed_at: task.completed_at,
                     duration_str: task.duration_str,
@@ -172,7 +172,7 @@ export const ResultTestsTable = {
                     programs_checked: task.programs_checked,
                     programs_available: task.programs_available,
                     programs_unavailable: task.programs_unavailable,
-                    comment: task.comment || '-'
+                    comment: task.comment || ''
                 }));
 
                 this.state.totalTasks = response.total || 0;
@@ -225,7 +225,7 @@ export const ResultTestsTable = {
             <div class="task-info-grid">
                 <div class="task-info-item">
                     <span class="task-info-label">ID задачи:</span>
-                    <span class="task-info-value">${taskRowData.id || '-'}</span>
+                    <span class="task-info-value">${taskRowData.id || ''}</span>
                 </div>
                 <div class="task-info-item">
                     <span class="task-info-label">Рабочее место:</span>
@@ -237,11 +237,11 @@ export const ResultTestsTable = {
                 </div>
                 <div class="task-info-item">
                     <span class="task-info-label">Дата и время начала:</span>
-                    <span class="task-info-value">${taskRowData.started_at ? DateUtils.getDateTime(new Date(taskRowData.started_at)) : '-'}</span>
+                    <span class="task-info-value">${taskRowData.started_at ? DateUtils.getDateTime(new Date(taskRowData.started_at)) : ''}</span>
                 </div>
                 <div class="task-info-item">
                     <span class="task-info-label">Дата и время окончания:</span>
-                    <span class="task-info-value">${taskRowData.completed_at ? DateUtils.getDateTime(new Date(taskRowData.completed_at)) : '-'}</span>
+                    <span class="task-info-value">${taskRowData.completed_at ? DateUtils.getDateTime(new Date(taskRowData.completed_at)) : ''}</span>
                 </div>
                 <div class="task-info-item">
                     <span class="task-info-label">Конфигурация:</span>
@@ -377,9 +377,11 @@ export const ResultTestsTable = {
         html += '</div>';
         modalBody.innerHTML = html;
 
+        // Обрабатываем скриншоты для всех таблиц (и результатов, и ошибок)
         if (this.state.showScreenshots) {
             this.attachScreenshotHandlers();
         }
+
         this.preventSummaryBubbling();
     },
 
@@ -429,12 +431,12 @@ export const ResultTestsTable = {
             const imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
             const dostupClass = item.DOSTUP === 1 ? 'status-available' : 'status-unavailable';
             const dostupText = item.DOSTUP === 1 ? 'Доступен' : 'Недоступен';
-            const dostupTText = item.DOSTUP_T || '-';
+            const dostupTText = item.DOSTUP_T || '';
 
             html += `
                 <tr>
                     <td class="vpn-cell">${item.VPN || '-'}</td>
-                    <td class="target-cell">${type === 'program' ? (item.PRG || '-') : (item.SITE || '-')}</td>
+                    <td class="target-cell">${type === 'program' ? (item.PRG || '-') : (item.SITE || '')}</td>
                     <td class="status-cell ${dostupClass}">${dostupText}</td>
                     <td class="dostup-t-cell">${dostupTText}</td>
             `;
@@ -447,7 +449,7 @@ export const ResultTestsTable = {
                         </td>
                     `;
                 } else {
-                    html += `<td class="screenshot-cell">—</td>`;
+                    html += `<td class="screenshot-cell"></td>`;
                 }
             }
 
@@ -464,71 +466,92 @@ export const ResultTestsTable = {
     },
 
     renderErrorsTable(items, type) {
+        const showScreenshots = this.state.showScreenshots;
+
         // Если нет данных, показываем пустую таблицу с заголовками
         if (!items || items.length === 0) {
             return `
-                <div class="results-table-wrapper">
-                    <table class="results-table errors-table">
-                        <thead>
-                            <tr>
-                                <th>${type === 'vpn' ? 'VPN' : (type === 'program' ? 'Приложение' : 'Сайт')}</th>
-                                <th>Ошибка</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="2" class="empty-table-row">Нет данных</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        let html = `
             <div class="results-table-wrapper">
                 <table class="results-table errors-table">
                     <thead>
                         <tr>
                             <th>${type === 'vpn' ? 'VPN' : (type === 'program' ? 'Приложение' : 'Сайт')}</th>
                             <th>Ошибка</th>
+                            ${showScreenshots ? '<th>Скриншот</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>
+                        <tr>
+                            <td colspan="${showScreenshots ? 3 : 2}" class="empty-table-row">Нет данных</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         `;
+        }
+
+        let html = `
+        <div class="results-table-wrapper">
+            <table class="results-table errors-table">
+                <thead>
+                    <tr>
+                        <th>${type === 'vpn' ? 'VPN' : (type === 'program' ? 'Приложение' : 'Сайт')}</th>
+                        <th>Ошибка</th>
+                        ${showScreenshots ? '<th>Скриншот</th>' : ''}
+                    </tr>
+                </thead>
+                <tbody>
+    `;
 
         items.forEach(item => {
-            let name = '-';
+            let name = '';
             let error = 'Ошибка подключения';
+            let imageSrc = null;
 
             if (typeof item === 'object') {
                 if (type === 'vpn') {
-                    name = item.VPN || '-';
+                    name = item.VPN || '';
                     error = item.ERR || 'Ошибка подключения';
+                    imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
                 } else if (type === 'program') {
-                    name = item.PRG || '-';
+                    name = item.PRG || '';
                     error = item.ERR || 'Ошибка подключения';
+                    imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
                 } else if (type === 'site') {
-                    name = item.SITE || '-';
+                    name = item.SITE || '';
                     error = item.ERR || 'Ошибка подключения';
+                    imageSrc = item.SCR ? `data:image/png;base64,${item.SCR}` : null;
                 }
             } else {
                 name = item;
             }
 
             html += `
-                <tr>
-                    <td class="error-name">${name}</td>
-                    <td class="error-message-cell">${error}</td>
-                </tr>
-            `;
+            <tr>
+                <td class="error-name">${name}</td>
+                <td class="error-message-cell">${error}</td>
+        `;
+
+            if (showScreenshots) {
+                if (imageSrc) {
+                    html += `
+                    <td class="screenshot-cell">
+                        <img src="${imageSrc}" class="screenshot-img" data-src="${imageSrc}" alt="Скриншот ошибки" loading="lazy">
+                    </td>
+                `;
+                } else {
+                    html += `<td class="screenshot-cell"></td>`;
+                }
+            }
+
+            html += `</tr>`;
         });
 
         html += `
-                    </tbody>
-                </table>
-            </div>
-        `;
+                </tbody>
+            </table>
+        </div>
+    `;
 
         return html;
     },
@@ -635,23 +658,23 @@ export const ResultTestsTable = {
                     <td class="task-workstation-id">${task.workstation_id}</td>
                     <td class="task-workstation-ip">${task.workstation_ip}</td>
                     <td class="task-time">${task.started_at ? DateUtils.getDateTime(new Date(task.started_at)) : '-'}</td>
-                    <td class="task-time">${task.completed_at ? DateUtils.getDateTime(new Date(task.completed_at)) : '-'}</td>
-                    <td class="task-duration">${task.duration_str || '-'}</td>
+                    <td class="task-time">${task.completed_at ? DateUtils.getDateTime(new Date(task.completed_at)) : ''}</td>
+                    <td class="task-duration">${task.duration_str || ''}</td>
                     <td class="task-status">${this.getStatusText(task.status)}</td>
                     
                     <td class="task-stats">${task.vpn_total}</td>
-                    <td class="task-stats ${this.getConnectedClass(task.vpn_connected, task.vpn_total)}">${task.vpn_connected ?? '-'}</td>
-                    <td class="task-stats ${this.getFailedClass(task.vpn_failed)}">${task.vpn_failed ?? '-'}</td>
+                    <td class="task-stats ${this.getConnectedClass(task.vpn_connected, task.vpn_total)}">${task.vpn_connected ?? ''}</td>
+                    <td class="task-stats ${this.getFailedClass(task.vpn_failed)}">${task.vpn_failed ?? ''}</td>
                     
                     <td class="task-stats">${task.sites_total}</td>
-                    <td class="task-stats">${task.sites_checked ?? '-'}</td>
-                    <td class="task-stats ${this.getAvailableClass(task.sites_available)}">${task.sites_available ?? '-'}</td>
-                    <td class="task-stats ${this.getUnavailableClass(task.sites_unavailable)}">${task.sites_unavailable ?? '-'}</td>
+                    <td class="task-stats">${task.sites_checked ?? ''}</td>
+                    <td class="task-stats ${this.getAvailableClass(task.sites_available)}">${task.sites_available ?? ''}</td>
+                    <td class="task-stats ${this.getUnavailableClass(task.sites_unavailable)}">${task.sites_unavailable ?? ''}</td>
                     
                     <td class="task-stats">${task.programs_total}</td>
-                    <td class="task-stats">${task.programs_checked ?? '-'}</td>
-                    <td class="task-stats ${this.getAvailableClass(task.programs_available)}">${task.programs_available ?? '-'}</td>
-                    <td class="task-stats ${this.getUnavailableClass(task.programs_unavailable)}">${task.programs_unavailable ?? '-'}</td>
+                    <td class="task-stats">${task.programs_checked ?? ''}</td>
+                    <td class="task-stats ${this.getAvailableClass(task.programs_available)}">${task.programs_available ?? ''}</td>
+                    <td class="task-stats ${this.getUnavailableClass(task.programs_unavailable)}">${task.programs_unavailable ?? ''}</td>
                     
                     <td class="task-comment">${task.comment}</td>
                     <td class="task-config">${this.formatConfig(task.config)}</td>
