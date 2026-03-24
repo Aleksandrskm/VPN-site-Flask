@@ -11,7 +11,7 @@ export const Header = {
 
         const title = document.createElement('h2');
         title.className = 'title';
-        title.textContent = 'Система тестирование доступности сайтов и приложений подключенных через VPN - сервисы';
+        title.textContent = 'АСТЭБ';
 
         const buttonsDiv = document.createElement('div');
         buttonsDiv.className = 'buttons';

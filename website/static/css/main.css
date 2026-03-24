@@ -45,6 +45,7 @@ main {
     border-radius: 4px;
     transition: all 0.3s;
     white-space: nowrap;
+    font-size: 18px;
 }
 
 .main-nav a:hover {

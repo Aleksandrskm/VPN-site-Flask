@@ -230,7 +230,7 @@ export const FormTask = {
                 ${getCategoryTitle(category)}
                 ${state.validationErrors[category] ? '<span class="error-badge">Обязательно для выбора</span>' : ''}
             `;
-            article.appendChild(title);
+
 
             const controls = document.createElement('div');
             controls.className = 'category-controls';
@@ -265,7 +265,8 @@ export const FormTask = {
 
             controls.appendChild(selectAllBtn);
             controls.appendChild(clearAllBtn);
-            controls.appendChild(countSpan);
+            title.appendChild(countSpan);
+            article.appendChild(title);
             article.appendChild(controls);
 
             if (state.validationErrors[category]) {

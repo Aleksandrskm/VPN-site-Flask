@@ -32,7 +32,7 @@ export const ArmsList = {
         header.className = 'arms-header';
 
         const title = document.createElement('h3');
-        title.textContent = 'Выберите АРМы для тестирования';
+        title.textContent = 'Точки проверок:';
 
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'button-group';
@@ -60,7 +60,7 @@ export const ArmsList = {
         if (validationError) {
             this.components.errorMsg = document.createElement('div');
             this.components.errorMsg.className = 'error-message';
-            this.components.errorMsg.textContent = 'Выберите хотя бы один АРМ';
+            this.components.errorMsg.textContent = 'Выберите хотя бы одну Точку проверок';
             section.appendChild(this.components.errorMsg);
         }
 
@@ -70,7 +70,7 @@ export const ArmsList = {
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
         searchInput.className = 'form-control';
-        searchInput.placeholder = 'Поиск АРМов...';
+        searchInput.placeholder = 'Поиск точек проверок';
         this.components.searchInput = searchInput;
         searchDiv.appendChild(searchInput);
         section.appendChild(searchDiv);
@@ -166,7 +166,7 @@ export const ArmsList = {
             if (!this.components.errorMsg) {
                 this.components.errorMsg = document.createElement('div');
                 this.components.errorMsg.className = 'error-message';
-                this.components.errorMsg.textContent = 'Выберите хотя бы один АРМ';
+                this.components.errorMsg.textContent = 'Выберите хотя бы одну Точку проверок';
                 // Вставляем после header
                 const header = this.element.querySelector('.arms-header');
                 if (header) {

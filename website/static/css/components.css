@@ -233,6 +233,7 @@
     margin: 0;
     max-height: 300px;
     overflow-y: auto;
+    background: #8080806b;
 }
 
 .items-list li {
@@ -263,7 +264,9 @@
     word-break: break-word;
     line-height: 1.4;
 }
-
+.items-list li:hover {
+    background-color: white;
+}
 /* Адаптивность для планшетов */
 @media (max-width: 768px) {
     .header {
@@ -402,4 +405,73 @@
         padding: 5px 8px;
         font-size: 12px;
     }
+}
+/* Buttons */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #545b62;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Единые стили для кнопок "Выбрать все" и "Снять все" */
+.btn-select-all,
+.btn-clear-all,
+.button-group .btn-secondary,
+.category-controls .btn-secondary {
+    min-width: 150px !important;
+    min-height: 30px !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    border-radius: 6px !important;
+    flex: 0 0 auto !important;
+}
+
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 16px;
 }

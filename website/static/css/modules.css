@@ -353,10 +353,12 @@
 
 /* ArmsList Module */
 .arms-list {
+
     background: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 25px;
+    width: 100%;
 }
 
 .arms-list.error {
@@ -374,7 +376,7 @@
 
 .arms-header h3 {
     color: #495057;
-    font-size: 1rem;
+    font-size: 1.25rem;
     flex: 1;
 }
 
@@ -385,6 +387,7 @@
 }
 
 .arms-search {
+    width: 50%;
     margin-bottom: 15px;
 }
 
@@ -398,9 +401,15 @@
     overflow-y: auto;
     border: 1px solid #dee2e6;
     border-radius: 4px;
-    background: white;
+    width: 50%;
+    background: #8080806b;
 }
-
+@media (max-width: 480px)  {
+    .arms-checkboxes,.arms-search
+    {
+        width: 100%;
+    }
+}
 .arm-item {
     padding: 8px 12px;
     border-bottom: 1px solid #dee2e6;
@@ -610,6 +619,7 @@
 
     .arms-list {
         padding: 15px;
+        width: 100%;
     }
 
     .data-editor {
@@ -771,6 +781,7 @@
 
     .arms-list {
         padding: 12px;
+        width: 100%;
     }
 
     .arms-header .button-group {
@@ -3481,5 +3492,49 @@
     .pagination-controls .btn {
         min-width: 48px;
         height: 48px;
+    }
+}
+/* Адаптация кнопок на мобильных устройствах */
+@media (max-width: 768px) {
+    .arms-header .button-group .btn,
+    .category-controls .btn {
+        min-width: 100px !important;
+        min-height: 36px !important;
+        padding: 8px 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .arms-header .button-group,
+    .category-controls {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .arms-header .button-group .btn,
+    .category-controls .btn {
+        min-width: calc(50% - 4px) !important;
+        flex: 1 !important;
+        min-height: 40px !important;
+        padding: 10px 8px !important;
+        font-size: 14px !important;
+    }
+
+    .arms-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .arms-header .button-group {
+        width: 100%;
+    }
+}
+
+@media (max-width: 380px) {
+    .arms-header .button-group .btn,
+    .category-controls .btn {
+        min-width: calc(50% - 4px) !important;
+        font-size: 12px !important;
+        padding: 8px 6px !important;
     }
 }
