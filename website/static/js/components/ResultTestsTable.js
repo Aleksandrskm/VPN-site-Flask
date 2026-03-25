@@ -355,21 +355,21 @@ export const ResultTestsTable = {
 
         // Ошибки VPN
         html += '<details class="detail-section" open>';
-        html += '<summary><h4>Ошибки VPN</h4></summary>';
+        html += '<summary><h4>Неподключенные VPN</h4></summary>';
         html += '<div class="details-content">';
         html += this.renderErrorsTable(detail.unconnected_vpns || [], 'vpn');
         html += '</div></details>';
 
         // Ошибки приложений
         html += '<details class="detail-section" open>';
-        html += '<summary><h4>Ошибки приложений</h4></summary>';
+        html += '<summary><h4>Неподключенные приложения</h4></summary>';
         html += '<div class="details-content">';
         html += this.renderErrorsTable(detail.unconnected_programs || [], 'program');
         html += '</div></details>';
 
         // Ошибки сайтов
         html += '<details class="detail-section" open>';
-        html += '<summary><h4>Ошибки сайтов</h4></summary>';
+        html += '<summary><h4>Неподключенные сайты</h4></summary>';
         html += '<div class="details-content">';
         html += this.renderErrorsTable(detail.unconnected_sites || [], 'site');
         html += '</div></details>';

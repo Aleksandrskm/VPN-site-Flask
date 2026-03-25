@@ -77,8 +77,28 @@ const App = {
         }
     },
 
+    // Метод для установки класса на body в зависимости от страницы
+    setPageClass(page) {
+        // Удаляем все существующие классы страниц
+        document.body.classList.remove('page-results', 'page-plan', 'page-task-manager', 'page-data-editor');
+
+        // Добавляем класс для текущей страницы
+        if (page === 'results') {
+            document.body.classList.add('page-results');
+        } else if (page === 'plan') {
+            document.body.classList.add('page-plan');
+        } else if (page === 'task-manager') {
+            document.body.classList.add('page-task-manager');
+        } else if (page === 'data-editor') {
+            document.body.classList.add('page-data-editor');
+        }
+    },
+
     async loadPage(page) {
         this.currentPage = page;
+
+        // Устанавливаем класс на body для текущей страницы
+        this.setPageClass(page);
 
         const container = document.getElementById('page-container');
         container.innerHTML = '<div class="loading">Загрузка...</div>';

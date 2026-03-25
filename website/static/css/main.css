@@ -139,5 +139,263 @@ main {
 @media (max-width: 480px) {
     .page-section {
         min-height: 250px;
+        height: 50vh;
     }
 }
+/* ===== СТИЛИ ТОЛЬКО ДЛЯ СТРАНИЦЫ РЕДАКТОРА ДАННЫХ ===== */
+/* Все эти стили применяются только когда на body есть класс page-data-editor */
+
+body.page-data-editor .data-editor {
+    height: calc(100vh - 240px);
+    min-height: 450px;
+    overflow: hidden;
+}
+
+body.page-data-editor .left-column {
+    height: 100%;
+    overflow: hidden;
+}
+
+body.page-data-editor .right-column {
+    height: 100%;
+    overflow: hidden;
+}
+
+body.page-data-editor .table-lists {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+}
+
+body.page-data-editor .table-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+body.page-data-editor .table-view {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+body.page-data-editor .table-section {
+    flex: 1;
+    overflow: auto;
+    min-height: 300px;
+    margin-bottom: 15px;
+}
+
+body.page-data-editor .table-btns-section {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+}
+
+body.page-data-editor .table-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Адаптация для высоты 700-800px - только для редактора данных */
+@media (max-height: 800px) {
+    body.page-data-editor .data-editor {
+        height: calc(100vh - 120px);
+        min-height: 400px;
+    }
+
+    body.page-data-editor .right-column {
+        padding: 15px;
+        overflow: auto;
+        height: 80%;
+    }
+
+    body.page-data-editor .left-column {
+        padding: 15px;
+        overflow: auto;
+        height: 80%;
+    }
+
+    body.page-data-editor .data-table th {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    body.page-data-editor .data-table td {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+
+    body.page-data-editor .table-btns-section {
+        padding-top: 12px;
+    }
+
+    body.page-data-editor .table-btns .btn {
+        min-width: 90px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Адаптация для высоты 600-700px - только для редактора данных */
+@media (max-height: 700px) {
+    body.page-data-editor main {
+        height: calc(100vh - 60px);
+        overflow: hidden;
+        padding: 10px;
+    }
+
+    body.page-data-editor .data-editor {
+        height: 100%;
+        min-height: 350px;
+        gap: 12px;
+    }
+
+    body.page-data-editor .right-column {
+        padding: 12px;
+        overflow: auto;
+        height: 80%;
+    }
+
+    body.page-data-editor .left-column {
+        padding: 12px;
+        overflow: auto;
+        height: 80%;
+    }
+
+    body.page-data-editor .table-lists h3 {
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+    }
+
+    body.page-data-editor .table-view h3 {
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+    }
+
+    body.page-data-editor .table-section {
+        margin-bottom: 12px;
+    }
+
+    body.page-data-editor .data-table th {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+
+    body.page-data-editor .data-table td {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+
+    body.page-data-editor .table-btns-section {
+        padding-top: 10px;
+    }
+
+    body.page-data-editor .table-btns .btn {
+        min-width: 80px;
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Адаптация для высоты 600px - только для редактора данных */
+@media (max-height: 600px) {
+    body.page-data-editor main {
+        padding: 6px;
+    }
+
+    body.page-data-editor .data-editor {
+        gap: 10px;
+    }
+
+    body.page-data-editor .right-column {
+        padding: 10px;
+        overflow: auto;
+    }
+
+    body.page-data-editor .table-lists {
+        padding: 10px;
+        overflow: auto;
+    }
+
+    body.page-data-editor .table-lists h3 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    body.page-data-editor .table-view h3 {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    body.page-data-editor .table-section {
+        margin-bottom: 10px;
+    }
+
+    body.page-data-editor .data-table th {
+        padding: 5px 6px;
+        font-size: 11px;
+    }
+
+    body.page-data-editor .data-table td {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    body.page-data-editor .table-btns-section {
+        padding-top: 8px;
+    }
+
+    body.page-data-editor .table-btns .btn {
+        min-width: 70px;
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+/* Для планшетов - только для редактора данных */
+@media (max-width: 768px) {
+    body.page-data-editor .data-editor {
+        height: auto;
+        min-height: 500px;
+        overflow: auto;
+    }
+
+    body.page-data-editor .left-column {
+        height: 250px;
+        max-height: 250px;
+    }
+
+    body.page-data-editor .right-column {
+        height: 500px;
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    body.page-data-editor .right-column {
+        height: 450px;
+        min-height: 350px;
+    }
+
+    body.page-data-editor .table-btns .btn {
+        min-width: calc(50% - 3px);
+        font-size: 12px;
+        padding: 8px 6px;
+    }
+}
+/* Глобальные стили для всех страниц при низкой высоте */
+@media (max-height: 700px) {
+    body {
+        overflow: hidden;
+    }
+
+    #app {
+        height: 100vh;
+        overflow: hidden;
+    }
+}
+

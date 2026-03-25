@@ -3,28 +3,32 @@
     background: white;
     border-radius: 8px;
     padding: 20px;
-    margin-bottom: 20px;
-    height: calc(90vh - 140px);
+    height: 100%;
     overflow: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .table-lists h3 {
     color: #495057;
     margin-bottom: 15px;
     font-size: 1.1rem;
+    flex-shrink: 0;
 }
 
 .table-lists hr {
     border: none;
     border-top: 2px solid #007bff;
     margin: 10px 0 20px;
+    flex-shrink: 0;
 }
 
 .table-list {
     list-style: none;
     padding: 0;
-    max-height: 400px;
-
+    flex: 1;
+    overflow-y: auto;
+    margin: 0;
 }
 .article{
     margin-bottom: 15px;
@@ -51,31 +55,40 @@
 .table-view {
     background: white;
     border-radius: 8px;
-    padding: 20px;
     display: flex;
     flex-direction: column;
-    height: 95%;
-    min-height: 500px;
+    height: 100%;
+    width: 100%;
     overflow: hidden;
+}
+
+.table-view .content-header {
+    flex-shrink: 0;
+    margin-bottom: 15px;
 }
 
 .table-view h3 {
     color: #495057;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     word-break: break-word;
-    flex-shrink: 0;
+    font-size: 1.1rem;
+}
+
+.table-view hr {
+    border: none;
+    border-top: 2px solid #007bff;
+    margin: 5px 0 0 0;
 }
 
 /* Секция с таблицей - ограничена по высоте и имеет прокрутку */
 .table-section {
-    flex: 1 1 auto;
+    flex: 1;
     overflow: auto;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border: 1px solid #dee2e6;
     border-radius: 4px;
     background: white;
-    max-height: calc(100vh - 300px);
-    min-height: 300px;
+    min-height: 0;
 }
 
 /* Контейнер таблицы */
@@ -95,7 +108,7 @@
 
 .data-table th {
     background: #f8f9fa;
-    padding: 12px 15px;
+    padding: 10px 12px;
     text-align: left;
     font-weight: 600;
     color: #495057;
@@ -106,27 +119,13 @@
     top: 0;
     background: #f8f9fa;
     z-index: 10;
-    box-shadow: 0 1px 0 0 #dee2e6;
 }
 
 .data-table td {
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-bottom: 1px solid #dee2e6;
     color: #212529;
     white-space: nowrap;
-}
-
-.data-table tbody tr {
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.data-table tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-.data-table tbody tr.selected {
-    background-color: #e3f2fd;
 }
 
 /* Секция с кнопками - всегда видна внизу */
@@ -136,11 +135,6 @@
     padding-top: 15px;
     border-top: 1px solid #dee2e6;
     background: white;
-    position: relative;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 5;
 }
 
 .table-btns {
@@ -151,7 +145,7 @@
 
 .table-btns .btn {
     flex: 1 1 auto;
-    min-width: 120px;
+    min-width: 100px;
 }
 
 /* FormTask Module */
@@ -504,8 +498,9 @@
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: 20px;
-    min-height: 600px;
-    height: 100%;
+    height: calc(100vh - 240px);
+    min-height: 450px;
+    overflow: hidden;
 }
 
 .left-column {
@@ -514,10 +509,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    height: fit-content;
-    max-height: calc(100vh - 120px);
-    position: sticky;
-    top: 20px;
+    height: 100%;
     overflow: hidden;
 }
 
@@ -526,7 +518,7 @@
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    height: calc(90vh - 120px);
+    height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -2956,7 +2948,7 @@
 /* Очень маленькие экраны */
 @media (max-width: 480px) {
     .view-tasks-section {
-        height: calc(100vh - 220px);
+        height: calc(100vh - 250px);
         padding: 8px;
         overflow: auto;
     }
@@ -3536,5 +3528,329 @@
         min-width: calc(50% - 4px) !important;
         font-size: 12px !important;
         padding: 8px 6px !important;
+    }
+}
+/* Адаптация для высоты 700-800px */
+@media (max-height: 800px) {
+    .data-editor {
+        height: calc(100vh - 120px);
+        min-height: 400px;
+        gap: 15px;
+    }
+
+    .right-column {
+        padding: 15px;
+    }
+
+    .table-lists {
+        padding: 15px;
+    }
+
+    .table-lists h3 {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+
+    .table-view h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    .data-table th {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .data-table td {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+
+    .table-btns-section {
+        padding-top: 12px;
+    }
+
+    .table-btns .btn {
+        min-width: 90px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Адаптация для высоты 600-700px - КЛЮЧЕВЫЕ ПРАВКИ */
+@media (max-height: 700px) {
+    body {
+        overflow: hidden;
+    }
+
+    #app {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    main {
+        height: calc(100vh - 60px);
+        overflow: hidden;
+        padding: 10px;
+    }
+
+    .data-editor {
+        height: 100%;
+        min-height: 350px;
+        gap: 12px;
+    }
+    #page-container{
+        height: 100%;
+    }
+    .right-column {
+        padding: 12px;
+        height: 80%
+    }
+    .left-column{
+        height: 80%
+    }
+
+    .table-lists {
+        padding: 12px;
+    }
+
+    .table-lists h3 {
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+    }
+
+    .table-lists hr {
+        margin: 8px 0 12px;
+    }
+
+    .table-view h3 {
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+    }
+
+    .table-view hr {
+        margin: 4px 0 0 0;
+    }
+
+    .table-section {
+        margin-bottom: 12px;
+    }
+
+    .data-table th {
+        padding: 6px 8px;
+        font-size: 14px;
+    }
+
+    .data-table td {
+        padding: 5px 8px;
+        font-size: 14px;
+    }
+
+    .table-btns-section {
+        padding-top: 10px;
+    }
+
+    .table-btns .btn {
+        min-width: 80px;
+        padding: 5px 10px;
+        font-size: 14px;
+    }
+}
+
+/* Адаптация для высоты 600px - максимальное сжатие */
+@media (max-height: 600px) {
+    main {
+        padding: 6px;
+    }
+
+    .data-editor {
+        gap: 10px;
+    }
+
+    .right-column {
+        padding: 10px;
+    }
+
+    .table-lists {
+        padding: 10px;
+    }
+
+    .table-lists h3 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .table-lists hr {
+        margin: 6px 0 10px;
+    }
+
+    .table-list li {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .table-view h3 {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .table-section {
+        margin-bottom: 10px;
+    }
+
+    .data-table th {
+        padding: 5px 6px;
+        font-size: 11px;
+    }
+
+    .data-table td {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    .table-btns-section {
+        padding-top: 8px;
+    }
+
+    .table-btns {
+        gap: 8px;
+    }
+
+    .table-btns .btn {
+        min-width: 70px;
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+/* Адаптация для планшетов */
+@media (max-width: 992px) {
+    .data-editor {
+        grid-template-columns: 250px 1fr;
+        gap: 15px;
+        height: calc(100vh - 130px);
+    }
+}
+
+@media (max-width: 768px) {
+    .data-editor {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        height: auto;
+        min-height: 500px;
+        overflow: auto;
+    }
+
+    .left-column {
+        position: static;
+        height: 250px;
+        max-height: 250px;
+    }
+
+    .right-column {
+        height: 500px;
+        min-height: 400px;
+    }
+
+    .table-view {
+        height: 100%;
+    }
+
+    .table-section {
+        max-height: none;
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .right-column {
+        height: 450px;
+        min-height: 350px;
+        padding: 10px;
+    }
+
+    .table-view {
+        min-height: auto;
+    }
+
+    .table-section {
+        min-height: 180px;
+    }
+
+    .table-btns {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .table-btns .btn {
+        min-width: calc(50% - 3px);
+        flex: 1 1 auto;
+        font-size: 12px;
+        padding: 8px 6px;
+    }
+}
+
+@media (max-width: 380px) {
+    .right-column {
+        height: 400px;
+        min-height: 300px;
+    }
+
+    .table-section {
+        min-height: 150px;
+    }
+
+    .table-btns {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .table-btns .btn {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+/* Альбомная ориентация на мобильных */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        overflow: auto;
+    }
+
+    main {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .data-editor {
+        height: auto;
+        min-height: 300px;
+    }
+
+    .left-column {
+        height: 200px;
+        max-height: 200px;
+    }
+
+    .right-column {
+        height: 350px;
+    }
+
+    .table-section {
+        max-height: 200px;
+    }
+}
+
+/* Для touch-устройств увеличиваем область касания */
+@media (hover: none) and (pointer: coarse) {
+    .table-list li {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    .table-btns .btn {
+        min-height: 40px;
     }
 }
