@@ -13,7 +13,7 @@ export const armApi = {
             }
             return await response.json();
         } catch (error) {
-            console.error('Get arms failed:', error);
+            console.error('Get arms faile:', error);
             throw error;
         }
     }
